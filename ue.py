@@ -9,6 +9,9 @@ class user_equipment:
         self.requested_bitrate = requested_bitrate
         self.current_position = (starting_position[0], starting_position[1])
         self.h_m = starting_position[2]
+
+    def move(self):
+        return
     
 
     
