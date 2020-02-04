@@ -7,3 +7,8 @@ env.place_base_station((500, 200, 40), 700, 180, 12, 20, 16, 3, 20)
 #print(environment.compute_path_loss_cost_hata(env.ue_list[0], env.bs_list[0], env))
 rsrp = env.discover_bs(id)
 print(rsrp)
+for i in range (0, 100):
+    pos = env.ue_list[0].move()
+    print(pos)
+    rsrp = env.discover_bs(id)
+    print(rsrp)
