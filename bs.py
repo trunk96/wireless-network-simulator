@@ -52,9 +52,7 @@ class base_station:
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
-        print(r)
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
-        print(N_prb)
 
         if self.total_prb - self.allocated_prb <= N_prb:
             N_prb = self.total_prb - self.allocated_prb

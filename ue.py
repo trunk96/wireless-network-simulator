@@ -1,5 +1,6 @@
 import random
 import util
+#import matlab.engine
 
 MAX_STEP = 20
 
@@ -9,6 +10,9 @@ class user_equipment:
     current_position = None
     h_m = 1 #height of UE antenna
     env = None
+    current_bs = None
+    actual_data_rate = 0
+    MATLAB = 0
 
     def __init__ (self, requested_bitrate, ue_id, starting_position, env):
         self.ue_id = ue_id
@@ -39,8 +43,24 @@ class user_equipment:
         if len(available_bs) == 1:
             #this means there is only one available bs, so we have to connect to it
             bs = list(available_bs.keys())[0]
-            actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
-            print(actual_data_rate)
+            self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
+            self.current_bs = bs
+        else:
+            if self.MATLAB == 1:
+                #import function from matlab, in order to select the best action
+
+                #eng = matlab.engine.start_matlab()
+                #ret = eng.nomefunzione(arg1, arg2,...,argn)
+                return
+            else:
+                bs = max(available_bs, key = available_bs.get)
+                self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                self.current_bs = bs
+                print(bs)
+
+
+    def disconnect_from_bs(self):
+        util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
 
     def next_timestep(self):
         self.move()
