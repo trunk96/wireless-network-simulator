@@ -1,12 +1,13 @@
 from enum import Enum
 import math
+import environment
 
 class EnvType (Enum):
     RURAL = 0
     SUBURBAN = 1
     URBAN = 2
 
-bandwidth_pbr_lookup = {
+bandwidth_prb_lookup = {
     1.4: 6,
     3: 15,
     5: 25,
@@ -15,9 +16,11 @@ bandwidth_pbr_lookup = {
     20: 100
 }
 
+MIN_RSRP = -140 #dB
+
 def compute_rsrp(ue, bs, env):
     path_loss = compute_path_loss_cost_hata(ue, bs, env)
-    subcarrier_power = 10*math.log10(bs.antenna_power*1000 / (bs.total_pbr*bs.number_subcarriers))
+    subcarrier_power = 10*math.log10(bs.antenna_power*1000 / (bs.total_prb*bs.number_subcarriers))
     return subcarrier_power + bs.antenna_gain - bs.feeder_loss - path_loss
 
 def compute_path_loss_cost_hata(ue, bs, env, save = None):
@@ -59,3 +62,9 @@ def compute_path_loss_cost_hata(ue, bs, env, save = None):
     if (save is not None):
         save = path_loss
     return path_loss
+
+def find_bs_by_id(bs_id):
+    return environment.wireless_environment.bs_list[bs_id]
+
+def find_ue_by_id(ue_id):
+    return environment.wireless_environment.ue_list[ue_id]

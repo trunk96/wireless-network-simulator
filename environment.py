@@ -8,7 +8,6 @@ import math
 class wireless_environment:
     bs_list = []
     ue_list = []
-    thermal_noise = 0
     x_limit = None
     y_limit = None
     env_type = util.EnvType.URBAN
@@ -42,19 +41,19 @@ class wireless_environment:
     def remove_ue(self, ue_id):
         self.ue_list[ue_id] = None
 
-    def place_base_station(self, position, carrier_frequency, pbr_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, available_bandwidth = None, total_pbr = None):
+    def place_base_station(self, position, carrier_frequency, prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, available_bandwidth = None, total_prb = None):
         if position[2] > 200 or position[2] < 30:
             raise Exception("COST-HATA model requires BS height in [30, 200]m")
         
         if (carrier_frequency < 150 or carrier_frequency > 2000):
             raise Exception("your results may be incorrect because your carrier frequency is outside the boundaries of COST-HATA path loss model")
-        if (available_bandwidth is None and total_pbr is None):
-            raise Exception("you havce to specify available bandwidth or total PBRs")
-        elif (total_pbr is not None):
-            new_bs = bs.base_station(len(self.bs_list), total_pbr, pbr_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position)
+        if (available_bandwidth is None and total_prb is None):
+            raise Exception("you havce to specify available bandwidth or total prbs")
+        elif (total_prb is not None):
+            new_bs = bs.base_station(len(self.bs_list), total_prb, prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
-            if (available_bandwidth in util.bandwidth_pbr_lookup):
-                new_bs = bs.base_station(len(self.bs_list), util.bandwidth_pbr_lookup[available_bandwidth], pbr_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position)
+            if (available_bandwidth in util.bandwidth_prb_lookup):
+                new_bs = bs.base_station(len(self.bs_list), util.bandwidth_prb_lookup[available_bandwidth], prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
             else:
                 raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
         
@@ -66,12 +65,17 @@ class wireless_environment:
     #associated to each BS
     def discover_bs(self, ue_id):
        thread_pool = []
-       rsrp = [None]*len(self.bs_list)
+       #rsrp = [None]*len(self.bs_list)
+       rsrp = dict()
        with ThreadPoolExecutor(max_workers=len(self.bs_list)) as executor:
             for i in range(0, len(self.bs_list)):
                 thread = executor.submit(util.compute_rsrp, self.ue_list[ue_id], self.bs_list[i], self)
                 thread_pool.append(thread)
             for i in range(0, len(self.bs_list)):
-                rsrp[i] = thread_pool[i].result()
+                res = thread_pool[i].result() 
+                if (res > util.MIN_RSRP):
+                    rsrp[i] = res
        return rsrp
+       
+
 

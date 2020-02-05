@@ -1,4 +1,5 @@
 import random
+import util
 
 MAX_STEP = 20
 
@@ -33,5 +34,12 @@ class user_equipment:
                 self.current_position = (self.current_position[0], self.current_position[1] - size)
         return self.current_position
     
+    def connect_to_bs(self):
+        available_bs = self.env.discover_bs(self.ue_id)
+        if len(available_bs) == 1:
+            #this means there is only one available bs, so we have to connect to it
+            bs = list(available_bs.keys())[0]
+            actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
+            print(actual_data_rate)
 
     
