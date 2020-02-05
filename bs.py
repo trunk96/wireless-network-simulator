@@ -68,6 +68,18 @@ class base_station:
             self.allocated_prb += N_prb        
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
+    def request_disconnection(self, ue_id):
+        N_prb = self.ue_pb_allocation[ue_id]
+        self.allocated_prb -= N_prb
+        del self.ue_pb_allocation[ue_id]
+
+    #things to do before moving to the next timestep
+    def next_timestep(self):
+        self.resource_utilization_array[self.resource_utilization_counter] = self.allocated_prb
+        self.resource_utilization_counter += 1
+        if self.resource_utilization_counter % self.T == 0:
+            self.resource_utilization_counter = 0
+
         
     
 

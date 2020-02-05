@@ -42,4 +42,7 @@ class user_equipment:
             actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
             print(actual_data_rate)
 
+    def next_timestep(self):
+        self.move()
+
     

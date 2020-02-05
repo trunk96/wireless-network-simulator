@@ -76,6 +76,12 @@ class wireless_environment:
                 if (res > util.MIN_RSRP):
                     rsrp[i] = res
        return rsrp
+
+    def next_timestep(self):
+        for ue in self.ue_list:
+            ue.next_timestep()
+        for bs in self.bs_list:
+            bs.next_timestep()
        
 
 
