@@ -34,7 +34,11 @@ class wireless_environment:
             new_ue = ue.user_equipment(requested_bitrate, ue_id, (0,0,1), self)
         else: 
             new_ue = ue.user_equipment(requested_bitrate, ue_id, starting_position, self)
-        self.ue_list.append(new_ue)
+        
+        if (ue_id == len(self.ue_list)):
+            self.ue_list.append(new_ue)
+        else:
+            self.ue_list[ue_id] = new_ue
         return new_ue.ue_id
     
 
