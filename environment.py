@@ -47,8 +47,8 @@ class wireless_environment:
 
     def place_LTE_base_station(self, position, carrier_frequency, prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
         
-        if (available_bandwidth in util.bandwidth_prb_lookup):
-            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), util.bandwidth_prb_lookup[available_bandwidth], prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+        if (available_bandwidth in LTEbs.LTEbandwidth_prb_lookup):
+            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth], prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
         

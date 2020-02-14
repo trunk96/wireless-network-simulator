@@ -2,6 +2,15 @@ import math
 from scipy import constants
 import util
 
+LTEbandwidth_prb_lookup = {
+    1.4: 6,
+    3: 15,
+    5: 25,
+    10: 50,
+    15: 75,
+    20: 100
+}
+
 class LTEBaseStation:
     prb_bandwidth_size = 0
     total_prb = 0
@@ -54,7 +63,7 @@ class LTEBaseStation:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(util.bandwidth_prb_lookup.keys())[list(util.bandwidth_prb_lookup.values()).index(self.total_prb)]*1000000
+        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb)]*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
