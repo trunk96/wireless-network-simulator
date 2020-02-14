@@ -1,5 +1,6 @@
 import environment
 import util
+from satellite import satellite
 
 env = environment.wireless_environment(100000)
 id = env.insert_ue(10)
@@ -14,3 +15,12 @@ util.find_ue_by_id(0).connect_to_bs()
 #    print(pos)
 #    rsrp = env.discover_bs(id)
 #    print(rsrp)
+
+
+sat = satellite((100,20,1e6),BRmax=50,BRocc=40,BRreq=10,freq=20, antenna_gain=43, antenna_power=31, subcarrier_power=30)
+fspl = sat.fspl_dB()
+print(fspl)
+eirp = sat.eirp()
+print(eirp)
+bit = sat.received_power()
+print(bit)
