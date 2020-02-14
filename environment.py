@@ -1,5 +1,5 @@
-import ue
-import bs
+import UserEquipment as ue
+import LTEBaseStation as LTEbs
 import util
 from concurrent.futures import ThreadPoolExecutor
 import math
@@ -45,21 +45,12 @@ class wireless_environment:
     def remove_ue(self, ue_id):
         self.ue_list[ue_id] = None
 
-    def place_base_station(self, position, carrier_frequency, prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, available_bandwidth = None, total_prb = None):
-        if position[2] > 200 or position[2] < 30:
-            raise Exception("COST-HATA model requires BS height in [30, 200]m")
+    def place_LTE_base_station(self, position, carrier_frequency, prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
         
-        if (carrier_frequency < 150 or carrier_frequency > 2000):
-            raise Exception("your results may be incorrect because your carrier frequency is outside the boundaries of COST-HATA path loss model")
-        if (available_bandwidth is None and total_prb is None):
-            raise Exception("you havce to specify available bandwidth or total prbs")
-        elif (total_prb is not None):
-            new_bs = bs.base_station(len(self.bs_list), total_prb, prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+        if (available_bandwidth in LTEbs.LTEbandwidth_prb_lookup):
+            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth], prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
-            if (available_bandwidth in util.bandwidth_prb_lookup):
-                new_bs = bs.base_station(len(self.bs_list), util.bandwidth_prb_lookup[available_bandwidth], prb_bandwidth, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
-            else:
-                raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
+            raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
         
         self.bs_list.append(new_bs)
         return new_bs.bs_id

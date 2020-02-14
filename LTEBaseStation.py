@@ -2,7 +2,16 @@ import math
 from scipy import constants
 import util
 
-class base_station:
+LTEbandwidth_prb_lookup = {
+    1.4: 6,
+    3: 15,
+    5: 25,
+    10: 50,
+    15: 75,
+    20: 100
+}
+
+class LTEBaseStation:
     prb_bandwidth_size = 0
     total_prb = 0
     allocated_prb = 0
@@ -22,6 +31,12 @@ class base_station:
     resource_utilization_counter = 0
 
     def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, env):
+        if position[2] > 200 or position[2] < 30:
+            raise Exception("COST-HATA model requires BS height in [30, 200]m")
+        
+        if (carrier_frequency < 150 or carrier_frequency > 2000):
+            raise Exception("your results may be incorrect because your carrier frequency is outside the boundaries of COST-HATA path loss model")
+        
         self.prb_bandwidth_size = prb_bandwidth_size
         self.total_prb = total_prb
         self.antenna_power = antenna_power
@@ -48,7 +63,7 @@ class base_station:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(util.bandwidth_prb_lookup.keys())[list(util.bandwidth_prb_lookup.values()).index(self.total_prb)]*1000000
+        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb)]*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz

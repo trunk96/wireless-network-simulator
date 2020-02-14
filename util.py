@@ -7,7 +7,7 @@ class EnvType (Enum):
     SUBURBAN = 1
     URBAN = 2
 
-bandwidth_prb_lookup = {
+LTEbandwidth_prb_lookup = {
     1.4: 6,
     3: 15,
     5: 25,
