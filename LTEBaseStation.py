@@ -2,7 +2,7 @@ import math
 from scipy import constants
 import util
 
-class base_station:
+class LTEBaseStation:
     prb_bandwidth_size = 0
     total_prb = 0
     allocated_prb = 0
@@ -22,6 +22,12 @@ class base_station:
     resource_utilization_counter = 0
 
     def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, env):
+        if position[2] > 200 or position[2] < 30:
+            raise Exception("COST-HATA model requires BS height in [30, 200]m")
+        
+        if (carrier_frequency < 150 or carrier_frequency > 2000):
+            raise Exception("your results may be incorrect because your carrier frequency is outside the boundaries of COST-HATA path loss model")
+        
         self.prb_bandwidth_size = prb_bandwidth_size
         self.total_prb = total_prb
         self.antenna_power = antenna_power
