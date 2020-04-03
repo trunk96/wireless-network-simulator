@@ -78,7 +78,7 @@ class NRBaseStation:
     resource_utilization_array = [0] * T
     resource_utilization_counter = 0
 
-    def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, env):
+    def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, env):
         if position[2] > 200 or position[2] < 30:
             raise Exception("COST-HATA model requires BS height in [30, 200]m")
         
