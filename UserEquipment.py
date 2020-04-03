@@ -2,7 +2,7 @@ import random
 import util
 #import matlab.engine
 
-MAX_STEP = 20
+MAX_STEP = 2000
 
 class user_equipment:
     requested_bitrate = 0
@@ -22,6 +22,8 @@ class user_equipment:
         self.env = env
 
     def move(self):
+        self.current_position = (2000, 2000)
+        return
         val = random.randint(1, 4)
         size = random.randint(0, MAX_STEP) 
         if val == 1: 
@@ -62,6 +64,14 @@ class user_equipment:
 
     def disconnect_from_bs(self):
         util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
+
+    
+    def update_connection(self):
+        available_bs = self.env.discover_bs(self.ue_id)
+        print(available_bs)
+        self.actual_data_rate = util.find_bs_by_id(self.current_bs).update_connection(self.ue_id, self.requested_bitrate, available_bs)
+        print(self.current_bs)
+        print(self.actual_data_rate)
 
     def next_timestep(self):
         self.move()

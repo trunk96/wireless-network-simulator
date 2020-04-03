@@ -109,10 +109,8 @@ class NRBaseStation:
     def compute_rbur(self):
         return sum(self.resource_utilization_array)/(self.T*self.total_prb)
 
-    #this method will be called by an UE that tries to connect to this BS.
-    #the return value will be the actual bandwidth assigned to the user
-    def request_connection(self, ue_id, data_rate, rsrp):
-        
+    
+    def compute_nprb_NR(self, data_rate, rsrp):
         #compute SINR
         interference = 0
         for elem in rsrp:
@@ -125,11 +123,18 @@ class NRBaseStation:
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
         #based on the numerology choosen and considered the frame duration of 10ms, we transmit 1ms for mu = 0, 0.5ms for mu = 1, 0.25ms for mu = 2, 0.125ms for mu = 3 for each PRB
-        print(r)
+        #print(r)
         r = r / (10 * (2**self.numerology))
-        print(r)
+        #print(r)
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
-        print(N_prb)
+        #print(N_prb)
+        return N_prb, r
+
+    #this method will be called by an UE that tries to connect to this BS.
+    #the return value will be the actual bandwidth assigned to the user
+    def request_connection(self, ue_id, data_rate, rsrp):
+        
+        N_prb, r = self.compute_nprb_NR(data_rate, rsrp)
 
         if self.total_prb - self.allocated_prb <= N_prb:
             N_prb = self.total_prb - self.allocated_prb
@@ -140,13 +145,31 @@ class NRBaseStation:
         else:
             self.allocated_prb -= self.ue_pb_allocation[ue_id]
             self.ue_pb_allocation[ue_id] = N_prb
-            self.allocated_prb += N_prb        
+            self.allocated_prb += N_prb 
+        print(N_prb)       
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
         N_prb = self.ue_pb_allocation[ue_id]
         self.allocated_prb -= N_prb
         del self.ue_pb_allocation[ue_id]
+
+    
+    def update_connection(self, ue_id, data_rate, rsrp):
+
+        N_prb, r = self.compute_nprb_NR(data_rate, rsrp)
+        diff = N_prb - self.ue_pb_allocation[ue_id]
+        if self.total_prb - self.allocated_prb >= diff:
+            #there is the place for more PRB allocation (or less if diff is negative)
+            self.allocated_prb += diff
+            self.ue_pb_allocation[ue_id] += diff
+        else:
+            #there is no room for more PRB allocation
+            diff = self.total_prb - self.allocated_prb
+            self.allocated_prb += diff
+            self.ue_pb_allocation[ue_id] += diff
+        N_prb = self.ue_pb_allocation[ue_id]
+        return N_prb*r/1000000 #remember that we want the result in Mbps 
 
     #things to do before moving to the next timestep
     def next_timestep(self):
