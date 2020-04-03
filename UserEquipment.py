@@ -56,7 +56,8 @@ class user_equipment:
                 bs = max(available_bs, key = available_bs.get)
                 self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
                 self.current_bs = bs
-                print(bs)
+        print(bs)
+        print(self.actual_data_rate)
 
 
     def disconnect_from_bs(self):

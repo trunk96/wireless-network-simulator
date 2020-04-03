@@ -67,6 +67,8 @@ class LTEBaseStation:
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
+        #with a single PRB we transmit just 1ms each 10ms (that is the frame lenght), so the actual rate is divided by 10
+        r = r / 10
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
 
         if self.total_prb - self.allocated_prb <= N_prb:
@@ -78,7 +80,8 @@ class LTEBaseStation:
         else:
             self.allocated_prb -= self.ue_pb_allocation[ue_id]
             self.ue_pb_allocation[ue_id] = N_prb
-            self.allocated_prb += N_prb        
+            self.allocated_prb += N_prb   
+ 
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):

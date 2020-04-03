@@ -68,8 +68,8 @@ class wireless_environment:
             raise Exception("NR frequency outside admissible ranges")
 
         if available_bandwidth in NRbs.NRbandwidth_prb_lookup[numerology][fr]:
-            pbr_size = 15*(2**numerology)*12 #15KHz*12subcarriers for numerology 0, 30KHz*12subcarriers for numerology 1, etc.
-            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth], pbr_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            prb_size = 15*(2**numerology)*12 #15KHz*12subcarriers for numerology 0, 30KHz*12subcarriers for numerology 1, etc.
+            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth], prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("The choosen bandwidth is not present in 5G NR standard with such numerology and frequency range")
 
