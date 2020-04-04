@@ -1,5 +1,6 @@
 import environment
 import util
+'''
 from satellite import satellite
 
 env = environment.wireless_environment(100000)
@@ -28,3 +29,43 @@ util.find_ue_by_id(0).update_connection()
 #print(eirp)
 #bit = sat.received_power()
 #print(bit)
+'''
+import matplotlib.pyplot as plt
+import numpy as np
+import time
+
+env = environment.wireless_environment(100000)
+id = env.insert_ue(10, starting_position = (4000, 80000, 1), speed = 10000, direction = 27)
+
+plt.ion()
+
+fig, ax = plt.subplots()
+
+plot = ax.scatter([], [])
+ax.set_xlim(0, 100000)
+ax.set_ylim(0, 100000)
+
+while True:
+    # get two gaussian random numbers, mean=0, std=1, 2 numbers
+    point = util.find_ue_by_id(0).move()
+    point = [point[0], point[1]]
+    print(point)
+    
+    #point = np.asarray(point)
+    # get the current points as numpy array with shape  (N, 2)
+    array = plot.get_offsets()
+    array = np.reshape(array, (-1,2))
+    point = np.reshape(point, (-1,2))
+    
+
+    # add the points to the plot
+    array = np.concatenate((array, point))
+    #print(array)
+    plot.set_offsets(array)
+
+    # update x and ylim to show all points:
+    #ax.set_xlim(array[:, 0].min() - 0.5, array[:,0].max() + 0.5)
+    #ax.set_ylim(array[:, 1].min() - 0.5, array[:, 1].max() + 0.5)
+    # update the figure
+    fig.canvas.draw()
+    time.sleep(1)
