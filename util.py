@@ -19,9 +19,13 @@ LTEbandwidth_prb_lookup = {
 MIN_RSRP = -140 #dB
 
 def compute_rsrp(ue, bs, env):
-    path_loss = compute_path_loss_cost_hata(ue, bs, env)
-    subcarrier_power = 10*math.log10(bs.antenna_power*1000 / (bs.total_prb*bs.number_subcarriers))
-    return subcarrier_power + bs.antenna_gain - bs.feeder_loss - path_loss
+    if bs.bs_type == "sat":
+        return bs.sat_eirp - bs.path_loss - bs.atm_loss - bs.ut_G_T
+    else:
+        #lte and nr case
+        path_loss = compute_path_loss_cost_hata(ue, bs, env)
+        subcarrier_power = 10*math.log10(bs.antenna_power*1000 / (bs.total_prb*bs.number_subcarriers))
+        return subcarrier_power + bs.antenna_gain - bs.feeder_loss - path_loss
 
 def compute_path_loss_cost_hata(ue, bs, env, save = None):
     #compute distance first

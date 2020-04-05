@@ -62,6 +62,7 @@ NRbandwidth_prb_lookup = {
 
 
 class NRBaseStation:
+    bs_type = "nr"
     prb_bandwidth_size = 0
     total_prb = 0
     allocated_prb = 0
@@ -114,7 +115,7 @@ class NRBaseStation:
         #compute SINR
         interference = 0
         for elem in rsrp:
-            if elem != self.bs_id:
+            if elem != self.bs_id and elem.bs_type != "sat":
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth

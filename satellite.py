@@ -1,94 +1,97 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 13 17:33:10 2020
-
-@author: Manuel Donsante
-"""
-
-
 import numpy as np
 from scipy import constants
+import math
+import util
 
+
+class Satellite:
+    """
+    Reference: INMARSAT 4F2 ATTACHMENT 1 TECHNICAL DESCRIPTION
+    Table A.12-1 - Link Budget for Signaling Forward Link from Class-1 User Terminal (200 kHz bandwidth; Spot Beam)
+    """
+    bs_type = "sat"
+    bs_id= None
+    pos = None  # tuple, (x,y) in meters
+    #h = None  # height [m]
+    carrier_bnd = 0.189  # carrier bandwidth [MHz]
+    carrier_frequency = 1500  # frequency [MHz]
+    sat_eirp = 44.5  # satellite effective isotropic radiated power [dBW]
+    path_loss = 188.4  # path loss [dB]
+    atm_loss = 0.1  # mean atmospheric loss [dB]
+    ut_G_T = -9.7  # user terminal G/T [dB/K]
+    #boltzmann_const = 10*math.log10(constants.Boltzmann)  # Boltzmann Constant [dBW/K/Hz]
+    dw_path_CN0 = 74.9  # Down-path C/N_0 (carrier power to noise power spectral density) [dBHz]
+    #adj_channel_int = 0.2  # adjacent channel interference [dB]
+    env = None
+    #rsrp = subcarrier_pow + antenna_gain - path_loss - atm_loss - adj_channel_int  # Reference Signals Received Power (for LTE)
+    #rsrp = None
+    #rbur = None  # resource block utilization ration
+
+
+    frame_length = 120832  # [120832 symbols]
+    rb_length = 288  # reference burst length, fixed [symbols]
+    tb_header = 280  # traffic burst header, fixed [symbols]
+    guard_space = 64  # fixed [symbols]
+    total_users = 0
+    frame_utilization = 0  # allocated resources
+    ue_allocation = {}
+
+    T = 10
+    resource_utilization_array = [0] * T
+    resource_utilization_counter = 0
+
+    # tb_length = tb_header + n * 64 [symbols]
+
+    def __init__(self, bs_id, position, env):
+        self.bs_id = bs_id
+        self.pos = (position[0], position[1])
+        self.env = env
+        #self.h = position[2]
 
     
-admissible_carrier ={
-    # bands expressed in GHz
-    "c": [4, 8],
-    "ku": [12, 18],
-    "k": [18, 27],
-    "ka": [27, 40],
-    }
-    
-
-class satellite:
-    # iridium satellite
-    pos = None      # position x, y
-    h = 0           # height [m]
-    BRmax = 0       # maximum bit rate in each datalink [kbps]
-    BRocc = 0       # occupied bit rate in each datalink
-    BRreq = 0       # requested bit rate
-    PD = 748        # packet delay [ms]
-    BER = 1e-6      # bit error rate
-    f = 0           # frequency [GHz]
-    antenna_gain = None         # [dBm]
-    antenna_power = None        # [W]
-    subcarrier_power = None
-    band = None
-
-
-    def __init__(self, position, BRmax, BRocc, BRreq, freq, antenna_gain, antenna_power, subcarrier_power):
-        self.position = (position[0],position[1])
-        self.h = position[2]
-        self.BRmax = BRmax
-        self.BRocc = BRocc
-        self.BRreq = BRreq
-        if freq <= 40 and freq >= 4:
-            self.f = freq
-        else:
-            raise Exception("Frequency not valid. Insert value from 4 to 40 GHz")
-        self.antenna_gain = antenna_gain
-        self.antenna_power = antenna_power
-        self.subcarrier_power = subcarrier_power
+    def compute_nsymb_SAT(self, data_rate, rsrp):
         
-    
-    #this method will be called by an UE that tries to connect to this BS.
-    #the return value will be the actual bandwidth assigned to the user
+        #compute SINR
+        interference = 0
+        for elem in rsrp:
+            if elem != self.bs_id and elem.bs_type == "sat":
+                interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
+            
+        thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000
+        sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
+
+        #considering QPSK we can transmit 2 bits in one symbol
+         
+
+
+        return
+
     def request_connection(self, ue_id, data_rate, rsrp):
+        # this method will be called by an UE that tries to connect to this satellite.
+        # the return value will be the actual datarate assigned to the user
+
+        # the capacity is bit/s
+        r = self.carrier_bnd * 1e3 * math.log2(1 + sinr)  # bandwidth is in GHz, sinr here is not in dB
+
+        # compute the effective resources needed
+        eff_res = self.rb_length + self.guard_space + self.tb_header +1
         return
-    
-    def request_disconnection(self, sat_id):
-        return
-        
+
+    def request_disconnection(self, ue_id):
+        N_prb = self.ue_allocation[ue_id]
+        self.frame_utilization -= N_prb
+        del self.ue_allocation[ue_id]
+
     def next_timestep(self):
         return
-    
-    
-    def fspl_dB(self):
-        # free space path loss [dB]
-        # f in [hertz]
-        # h im [m]
-        c = constants.speed_of_light
-        lamb = c/(self.f*1e9)     # from GHz to hertz
-        
-        L = 4*np.pi * (self.h)/lamb
-        L = 20*np.log10(L)     # Convert to dB
-        return L
-    
-     
-    def eirp(self):
-        # effective isotropic radiated power [dBW]
-        
-        return 10 * np.log10(1000 * self.antenna_power) +  self.antenna_gain
-    
-    
 
-    def received_power(self):
-        # in [dB]
-        
-        k = constants.Boltzmann
-        return self.eirp() - self.fspl_dB() + 10*np.log10(k)
-    
-    
-    
-    
-    
+    def compute_rbur(self):
+        """
+        RBUR: resource block utilization ratio.
+        PRB: physical resource block
+        Returns
+        -------
+        RBUR = #PRB allocated to che cell / #PRB belonging to the cell
+        """
+
+        return sum(self.resource_utilization_array)/(self.T*self.frame_length)
