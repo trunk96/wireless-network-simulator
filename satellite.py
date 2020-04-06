@@ -24,7 +24,7 @@ class Satellite:
     atm_loss = 0.1  # mean atmospheric loss [dB]
     ut_G_T = -9.7  # user terminal G/T [dB/K]
     #boltzmann_const = 10*math.log10(constants.Boltzmann)  # Boltzmann Constant [dBW/K/Hz]
-    dw_path_CN0 = 81.3  # Down-path C/N_0 (carrier power to noise power spectral density) [dBHz]
+    #dw_path_CN0 = 93.8  # Down-path C/N_0 (carrier power to noise power spectral density) [dBHz]
     #adj_channel_int = 0.2  # adjacent channel interference [dB]
     env = None
     #rsrp = subcarrier_pow + antenna_gain - path_loss - atm_loss - adj_channel_int  # Reference Signals Received Power (for LTE)
