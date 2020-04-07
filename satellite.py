@@ -83,22 +83,24 @@ class Satellite:
         # in the frame utilization but not in the ue_allocation dictionary
 
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
-        if self.total_symbols - self.frame_utilization <= N_symb + self.guard_space:
-            N_symb = self.total_symbols - self.frame_utilization - self.guard_space
+        if self.total_symbols - self.frame_utilization <= self.tb_header + N_symb + self.guard_space:
+            N_symb = self.total_symbols - self.frame_utilization - self.guard_space - self.tb_header
+            if N_symb <= 0:
+                N_symb = 0
 
         if ue_id not in self.ue_allocation:
-            self.ue_allocation[ue_id] = N_symb
-            self.frame_utilization += N_symb + self.guard_space
+            self.ue_allocation[ue_id] = self.tb_header + N_symb
+            self.frame_utilization += self.tb_header + N_symb + self.guard_space
         else:
             self.frame_utilization -= self.ue_allocation[ue_id] + self.guard_space
-            self.ue_allocation[ue_id] = N_symb
-            self.frame_utilization += N_symb + self.guard_space   
+            self.ue_allocation[ue_id] = self.tb_header + N_symb
+            self.frame_utilization += self.tb_header + N_symb + self.guard_space   
         print(N_symb)
         return r*N_symb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
-        N_symb = self.ue_allocation[ue_id]
-        self.frame_utilization -= N_symb + self.guard_space
+        N_symb_plus_header = self.ue_allocation[ue_id]
+        self.frame_utilization -= N_symb_plus_header + self.guard_space
         del self.ue_allocation[ue_id]
 
     def next_timestep(self):

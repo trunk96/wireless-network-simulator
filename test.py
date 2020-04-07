@@ -1,5 +1,14 @@
 import environment
 import util
+import Satellite
+
+
+env = environment.wireless_environment(100000)
+id = env.insert_ue(10)
+sat = Satellite.Satellite(0, (1,1,1), env)
+#print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
+sat.request_connection(id, 10, {0: -116.8})
+
 '''
 from satellite import satellite
 
@@ -29,7 +38,7 @@ util.find_ue_by_id(0).update_connection()
 #print(eirp)
 #bit = sat.received_power()
 #print(bit)
-'''
+
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -69,3 +78,4 @@ while True:
     # update the figure
     fig.canvas.draw()
     time.sleep(1)
+'''
