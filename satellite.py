@@ -65,13 +65,14 @@ class Satellite:
             
         thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
+        print(sinr)
+        r = self.carrier_bnd * 1000000 * math.log2(1 + sinr)
 
-        r = self.carrier_bnd * math.log2(1 + sinr)
-        r = r / self.frame_length # this is the data rate in [b/s] of a single symbol in a time frame
+        r = r / self.frame_length # this is the data rate in [b/s] that is possible to obtains for a single symbol assigned every time frame
 
         r_64 = r * 64 # we can transmit in blocks of 64 symbols
 
-        n_symb = math.ceil(data_rate / r_64) * 64
+        n_symb = math.ceil(data_rate*1000000 / r_64) * 64
         return n_symb, r
 
 
@@ -83,6 +84,7 @@ class Satellite:
         # in the frame utilization but not in the ue_allocation dictionary
 
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
+        print(N_symb)
         if self.total_symbols - self.frame_utilization <= self.tb_header + N_symb + self.guard_space:
             N_symb = self.total_symbols - self.frame_utilization - self.guard_space - self.tb_header
             if N_symb <= 0:
@@ -95,6 +97,7 @@ class Satellite:
             self.frame_utilization -= self.ue_allocation[ue_id] + self.guard_space
             self.ue_allocation[ue_id] = self.tb_header + N_symb
             self.frame_utilization += self.tb_header + N_symb + self.guard_space   
+        #print(r)
         print(N_symb)
         return r*N_symb/1000000 #we want a data rate in Mbps, not in bps
 

@@ -4,10 +4,18 @@ import Satellite
 
 
 env = environment.wireless_environment(100000)
-id = env.insert_ue(10)
-sat = Satellite.Satellite(0, (1,1,1), env)
+id = env.insert_ue(100)
+sat_id = env.place_SAT_base_station((1,1,1))
+sat = util.find_bs_by_id(sat_id)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
-sat.request_connection(id, 10, {0: -116.8})
+rsrp = env.discover_bs(id)
+#print(rsrp)
+util.find_ue_by_id(id).connect_to_bs()
+#print(sat.ue_allocation)
+#print(sat.frame_utilization)
+util.find_ue_by_id(id).disconnect_from_bs()
+#print(sat.ue_allocation)
+#print(sat.frame_utilization)
 
 '''
 from satellite import satellite

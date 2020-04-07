@@ -1,6 +1,7 @@
 import UserEquipment as ue
 import LTEBaseStation as LTEbs
 import NRBaseStation as NRbs
+import Satellite as SATbs
 import util
 from concurrent.futures import ThreadPoolExecutor
 import math
@@ -45,6 +46,13 @@ class wireless_environment:
 
     def remove_ue(self, ue_id):
         self.ue_list[ue_id] = None
+
+    
+    def place_SAT_base_station(self, position):       
+        new_bs = SATbs.Satellite(len(self.bs_list), position, self)
+        
+        self.bs_list.append(new_bs)
+        return new_bs.bs_id
 
     def place_LTE_base_station(self, position, carrier_frequency, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
         
