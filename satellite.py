@@ -112,7 +112,7 @@ class Satellite:
         # There are two cases: the first case is when an user has already some sybols allocated, the second case is when the user has no symbol allocated.
         # In the first case self.ue_allocation[ue_id] contains already the header and some symbols, so we have just to add the remaining symbols (if there is room)
         # In the second case self.ue_allocation[ue_id] is equal to 0, so we have to add the symbols, the header and the guard space. 
-        # If there is no room for actual data symbols allocation (in the latter case), we still must have self.ue_allocation[ue_id]=0, since it is useless to allocate just the header and the guard space
+        # If there is no room for actual data symbols allocation (in the latter case), we still must have self.ue_allocation[ue_id]=0, since it is useless to allocate just the header and the guard space.
 
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
         if self.ue_allocation[ue_id] != 0:
