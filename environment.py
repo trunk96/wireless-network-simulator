@@ -5,6 +5,7 @@ import Satellite as SATbs
 import util
 from concurrent.futures import ThreadPoolExecutor
 import math
+import random
 
 
 class wireless_environment:
@@ -33,7 +34,7 @@ class wireless_environment:
             ue_id = len(self.ue_list)
         
         if starting_position is None:
-            new_ue = ue.user_equipment(requested_bitrate, ue_id, (0,0,1), self, speed, direction)
+            new_ue = ue.user_equipment(requested_bitrate, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed, direction)
         else: 
             new_ue = ue.user_equipment(requested_bitrate, ue_id, starting_position, self, speed, direction)
         

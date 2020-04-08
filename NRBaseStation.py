@@ -115,7 +115,7 @@ class NRBaseStation:
         #compute SINR
         interference = 0
         for elem in rsrp:
-            if elem != self.bs_id and elem.bs_type != "sat":
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat":
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
@@ -147,7 +147,7 @@ class NRBaseStation:
             self.allocated_prb -= self.ue_pb_allocation[ue_id]
             self.ue_pb_allocation[ue_id] = N_prb
             self.allocated_prb += N_prb 
-        print(N_prb)       
+        #print(N_prb)       
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
@@ -174,6 +174,7 @@ class NRBaseStation:
 
     #things to do before moving to the next timestep
     def next_timestep(self):
+        print(self.allocated_prb)
         self.resource_utilization_array[self.resource_utilization_counter] = self.allocated_prb
         self.resource_utilization_counter += 1
         if self.resource_utilization_counter % self.T == 0:

@@ -103,7 +103,10 @@ class user_equipment:
     
     def connect_to_bs(self):
         available_bs = self.env.discover_bs(self.ue_id)
-        if len(available_bs) == 1:
+        if len(available_bs) == 0:
+            print("[NO BASE STATION FOUND]: User ID %s has not found any base station" %(self.ue_id))
+            return
+        elif len(available_bs) == 1:
             #this means there is only one available bs, so we have to connect to it
             bs = list(available_bs.keys())[0]
             self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
@@ -119,26 +122,35 @@ class user_equipment:
                 bs = max(available_bs, key = available_bs.get)
                 self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
                 self.current_bs = bs
-        print(bs)
-        print(self.actual_data_rate)
+        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%sMbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
 
 
     def disconnect_from_bs(self):
-        util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
+        if self.current_bs != None:
+            util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
+            print("[CONNECTION_TERMINATED]: User ID %s is now disconnected for base_station %s" %(self.ue_id, self.current_bs))
+            self.current_bs = None
+            self.actual_data_rate = None
+        return
+        
 
     
     def update_connection(self):
+        if self.current_bs == None:
+            return
+
         available_bs = self.env.discover_bs(self.ue_id)
-        print(available_bs)
-        if self.current_bs in available_bs:
+        #print(available_bs)
+        if len(available_bs) == 0:
+            print("[NO BASE STATION FOUND]: User ID %s has not found any base station during connection update" %(self.ue_id))
+        elif self.current_bs in available_bs:
             self.actual_data_rate = util.find_bs_by_id(self.current_bs).update_connection(self.ue_id, self.requested_bitrate, available_bs)
         else:
             #in this case the current base station is no more visible
             self.disconnect_from_bs()
             self.connect_to_bs()
 
-        print(self.current_bs)
-        print(self.actual_data_rate)
+        print("[CONNECTION_UPDATE]: User ID %s has updated its connection to base_station %s with a data rate of %s/%sMbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
 
     def next_timestep(self):
         self.move()

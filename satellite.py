@@ -18,7 +18,7 @@ class Satellite:
     pos = None  # tuple, (x,y) in meters
     #h = None  # height [m]
     carrier_bnd = 220  # carrier bandwidth [MHz]
-    carrier_frequency = 28.4  # frequency [MHz]
+    carrier_frequency = 28.4  # frequency [GHz]
     sat_eirp = 62 #45.1  # satellite effective isotropic radiated power [dBW]
     path_loss = 188.4  # path loss [dB]
     atm_loss = 0.1  # mean atmospheric loss [dB]
@@ -65,7 +65,6 @@ class Satellite:
             
         thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
-        print(sinr)
         r = self.carrier_bnd * 1000000 * math.log2(1 + sinr)
 
         r = r / self.frame_length # this is the data rate in [b/s] that is possible to obtains for a single symbol assigned every time frame
@@ -84,11 +83,13 @@ class Satellite:
         # in the frame utilization but not in the ue_allocation dictionary
 
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
-        print(N_symb)
+        #print(N_symb)
         if self.total_symbols - self.frame_utilization <= self.tb_header + N_symb + self.guard_space:
             N_symb = self.total_symbols - self.frame_utilization - self.guard_space - self.tb_header
             if N_symb <= 0:
                 N_symb = 0
+                self.ue_allocation[ue_id] = 0
+                return 0
 
         if ue_id not in self.ue_allocation:
             self.ue_allocation[ue_id] = self.tb_header + N_symb
@@ -98,7 +99,7 @@ class Satellite:
             self.ue_allocation[ue_id] = self.tb_header + N_symb
             self.frame_utilization += self.tb_header + N_symb + self.guard_space   
         #print(r)
-        print(N_symb)
+        #print(N_symb)
         return r*N_symb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
@@ -106,7 +107,46 @@ class Satellite:
         self.frame_utilization -= N_symb_plus_header + self.guard_space
         del self.ue_allocation[ue_id]
 
+    
+    def update_connection(self, ue_id, data_rate, rsrp):
+        # There are two cases: the first case is when an user has already some sybols allocated, the second case is when the user has no symbol allocated.
+        # In the first case self.ue_allocation[ue_id] contains already the header and some symbols, so we have just to add the remaining symbols (if there is room)
+        # In the second case self.ue_allocation[ue_id] is equal to 0, so we have to add the symbols, the header and the guard space. 
+        # If there is no room for actual data symbols allocation (in the latter case), we still must have self.ue_allocation[ue_id]=0, since it is useless to allocate just the header and the guard space
+
+        N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
+        if self.ue_allocation[ue_id] != 0:
+            diff = N_symb + self.tb_header - self.ue_allocation[ue_id] 
+        else:
+            diff = N_symb  +self.tb_header + self.guard_space
+        
+        if self.total_symbols - self.frame_utilization >= diff:
+            #there is the place for more symbols allocation (or less if diff is negative)
+            self.frame_utilization += diff
+            if self.ue_allocation[ue_id] != 0:
+                self.ue_allocation[ue_id] += diff
+            else:
+                self.ue_allocation[ue_id] += diff - self.guard_space
+        else:
+            #there is no room for more symbols allocation
+            diff = self.total_symbols - self.frame_utilization
+            if self.ue_allocation[ue_id] == 0 and diff < self.guard_space + self.tb_header + 64:
+                diff = 0
+            elif self.ue_allocation[ue_id] == 0:
+                self.frame_utilization += diff
+                self.ue_allocation[ue_id] = diff - self.tb_header -self.guard_space
+            else:
+                self.frame_utilization += diff
+                self.ue_allocation[ue_id] += diff
+        
+        if self.ue_allocation[ue_id] == 0:
+            return 0
+        N_symb = self.ue_allocation[ue_id] - self.tb_header
+        return N_symb*r/1000000 #remember that we want the result in Mbps 
+        
+
     def next_timestep(self):
+        print(self.frame_utilization)
         self.resource_utilization_array[self.resource_utilization_counter] = self.frame_utilization
         self.resource_utilization_counter += 1
         if self.resource_utilization_counter % self.T == 0:

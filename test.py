@@ -1,19 +1,60 @@
 import environment
 import util
 import Satellite
+import matplotlib.pyplot as plt
+import numpy as np
 
 
-env = environment.wireless_environment(100000)
-id = env.insert_ue(100)
-sat_id = env.place_SAT_base_station((1,1,1))
-sat = util.find_bs_by_id(sat_id)
+env = environment.wireless_environment(1000)
+ue = []
+for i in range(0, 20):
+    id = env.insert_ue(4)
+    ue.append(id)
+
+#sat_id = env.place_SAT_base_station((1,1,1))
+#sat = util.find_bs_by_id(sat_id)
+nr_bs = env.place_NR_base_station((200, 200, 40), 800, 2, 20, 16, 3, 100)
+
+nr_bs1 = env.place_NR_base_station((800, 200, 40), 800, 2, 20, 16, 3, 100)
+
+nr_bs2 = env.place_NR_base_station((500, 800, 40), 800, 2, 20, 16, 3, 100)
+
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
-rsrp = env.discover_bs(id)
-#print(rsrp)
-util.find_ue_by_id(id).connect_to_bs()
+for j in ue:
+    util.find_ue_by_id(j).connect_to_bs()
+    env.next_timestep()
+
+util.find_ue_by_id(0).disconnect_from_bs()
+
+for j in ue:
+    util.find_ue_by_id(j).update_connection()
+    env.next_timestep()
+
+print(util.find_bs_by_id(nr_bs).compute_rbur())
+
+fig, ax = plt.subplots()
+x = []
+y = []
+for i in ue:
+    x.append(util.find_ue_by_id(i).current_position[0])
+    y.append(util.find_ue_by_id(i).current_position[1])
+
+ax.set_xlim(0, env.x_limit)
+ax.set_ylim(0, env.y_limit)
+ax.scatter(x, y, color = "tab:blue", label = "UE")
+for i in ue:
+    ax.annotate(i, (x[i], y[i]))
+ax.scatter(util.find_bs_by_id(nr_bs).position[0], util.find_bs_by_id(nr_bs).position[1], color = "tab:orange", label="BS")
+ax.scatter(util.find_bs_by_id(nr_bs1).position[0], util.find_bs_by_id(nr_bs1).position[1], color = "tab:orange", label="BS_1")
+ax.scatter(util.find_bs_by_id(nr_bs2).position[0], util.find_bs_by_id(nr_bs2).position[1], color = "tab:orange", label="BS_2")
+ax.legend()
+ax.grid(True)
+plt.show()
+
+#util.find_ue_by_id(id).update_connection()
 #print(sat.ue_allocation)
 #print(sat.frame_utilization)
-util.find_ue_by_id(id).disconnect_from_bs()
+#util.find_ue_by_id(id).disconnect_from_bs()
 #print(sat.ue_allocation)
 #print(sat.frame_utilization)
 
