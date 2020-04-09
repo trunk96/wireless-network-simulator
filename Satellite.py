@@ -15,7 +15,7 @@ class Satellite:
     """
     bs_type = "sat"
     bs_id= None
-    pos = None  # tuple, (x,y) in meters
+    position = None  # tuple, (x,y) in meters
     #h = None  # height [m]
     carrier_bnd = 220  # carrier bandwidth [MHz]
     carrier_frequency = 28.4  # frequency [GHz]
@@ -31,7 +31,7 @@ class Satellite:
     #rsrp = None
     #rbur = None  # resource block utilization ration
 
-
+ 
     frame_length = 120832  # [120832 symbols]
     rb_length = 288  # reference burst length, fixed [symbols]
     tb_header = 280  # traffic burst header, fixed [symbols]
@@ -50,7 +50,7 @@ class Satellite:
 
     def __init__(self, bs_id, position, env):
         self.bs_id = bs_id
-        self.pos = (position[0], position[1])
+        self.position = (position[0], position[1])
         self.env = env
         #self.h = position[2]
 

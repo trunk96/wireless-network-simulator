@@ -7,14 +7,6 @@ class EnvType (Enum):
     SUBURBAN = 1
     URBAN = 2
 
-LTEbandwidth_prb_lookup = {
-    1.4: 6,
-    3: 15,
-    5: 25,
-    10: 50,
-    15: 75,
-    20: 100
-}
 
 MIN_RSRP = -140 #dB
 

@@ -3,53 +3,124 @@ import util
 import Satellite
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+import time
+
+plt.ion()
+fig, ax = plt.subplots()
+run = 0
+plot1 = None
+plot2 = None
+ann1 = []
+ann2 = []
+
+def plot(ue, bs):
+    global run
+    global ax
+    global fig
+    global plot1
+    global plot2
+    global ann1
+    global ann2
+    if plot1 != None and plot2 != None and len(ann1) != 0 and len(ann2) != 0:
+        x = np.array([])
+        x = np.reshape(x, (-1, 2))
+        plot1.set_offsets(x.copy())
+        plot2.set_offsets(x.copy())
+        for a in ann1:
+            try:
+                a.remove()
+            except:
+                continue
+        for a in ann2:
+            try:
+                a.remove()
+            except:
+                continue
+    x = []
+    y = []
+    x1 =[]
+    y1 = []
+    for i in ue:
+        x.append(util.find_ue_by_id(i).current_position[0])
+        y.append(util.find_ue_by_id(i).current_position[1])
+
+    for j in bs:
+        x1.append(util.find_bs_by_id(j).position[0])
+        y1.append(util.find_bs_by_id(j).position[1])
+
+
+    ax.set_xlim(0, env.x_limit)
+    ax.set_ylim(0, env.y_limit)
+    plot1 = ax.scatter(x, y, color = "tab:blue", label = "UE")
+    for i in ue:
+        a = ax.annotate(i, (x[i], y[i]))
+        ann1.append(a)
+
+    plot2 = ax.scatter(x1, y1, color = "tab:orange", label = "BS")
+    for j in bs:
+        a = ax.annotate("BS"+str(j), (x1[j], y1[j]))
+        ann2.append(a)
+
+    if run == 0:
+        ax.legend()
+        run += 1
+    ax.grid(True)
+    fig.canvas.draw()
 
 
 env = environment.wireless_environment(1000)
 ue = []
+bs = []
 for i in range(0, 20):
-    id = env.insert_ue(4)
+    id = env.insert_ue(4, speed = 100, direction = random.randint(0, 359))
     ue.append(id)
 
 #sat_id = env.place_SAT_base_station((1,1,1))
 #sat = util.find_bs_by_id(sat_id)
 nr_bs = env.place_NR_base_station((200, 200, 40), 800, 2, 20, 16, 3, 100)
+bs.append(nr_bs)
 
 nr_bs1 = env.place_NR_base_station((800, 200, 40), 800, 2, 20, 16, 3, 100)
+bs.append(nr_bs1)
 
 nr_bs2 = env.place_NR_base_station((500, 800, 40), 800, 2, 20, 16, 3, 100)
+bs.append(nr_bs2)
 
+lte_bs = env.place_LTE_base_station((50, 500, 40), 700, 20, 16, 3, 20)
+bs.append(lte_bs)
+
+lte_bs1 = env.place_LTE_base_station((900, 900, 40), 700, 20, 16, 3, 20)
+bs.append(lte_bs1)
+
+sat = env.place_SAT_base_station((500, 500, 35800000))
+bs.append(sat)
+
+
+plot(ue, bs)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
+random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
-    env.next_timestep()
 
-util.find_ue_by_id(0).disconnect_from_bs()
+plot(ue, bs)
+time.sleep(5)
+env.next_timestep()
 
+#util.find_ue_by_id(0).disconnect_from_bs()
+
+random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).update_connection()
-    env.next_timestep()
 
-print(util.find_bs_by_id(nr_bs).compute_rbur())
+plot(ue, bs)
+#env.next_timestep()
 
-fig, ax = plt.subplots()
-x = []
-y = []
-for i in ue:
-    x.append(util.find_ue_by_id(i).current_position[0])
-    y.append(util.find_ue_by_id(i).current_position[1])
 
-ax.set_xlim(0, env.x_limit)
-ax.set_ylim(0, env.y_limit)
-ax.scatter(x, y, color = "tab:blue", label = "UE")
-for i in ue:
-    ax.annotate(i, (x[i], y[i]))
-ax.scatter(util.find_bs_by_id(nr_bs).position[0], util.find_bs_by_id(nr_bs).position[1], color = "tab:orange", label="BS")
-ax.scatter(util.find_bs_by_id(nr_bs1).position[0], util.find_bs_by_id(nr_bs1).position[1], color = "tab:orange", label="BS_1")
-ax.scatter(util.find_bs_by_id(nr_bs2).position[0], util.find_bs_by_id(nr_bs2).position[1], color = "tab:orange", label="BS_2")
-ax.legend()
-ax.grid(True)
-plt.show()
+
+
+time.sleep(100)
+
 
 #util.find_ue_by_id(id).update_connection()
 #print(sat.ue_allocation)

@@ -145,6 +145,9 @@ class user_equipment:
             print("[NO BASE STATION FOUND]: User ID %s has not found any base station during connection update" %(self.ue_id))
         elif self.current_bs in available_bs:
             self.actual_data_rate = util.find_bs_by_id(self.current_bs).update_connection(self.ue_id, self.requested_bitrate, available_bs)
+            if self.actual_data_rate < self.requested_bitrate:
+                self.disconnect_from_bs()
+                self.connect_to_bs()
         else:
             #in this case the current base station is no more visible
             self.disconnect_from_bs()
