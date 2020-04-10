@@ -97,14 +97,15 @@ bs.append(nr_bs2)
 #bs.append(sat)
 env.setup_dqn()
 
-plot(ue, bs)
+#plot(ue, bs)
+time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
 random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
 
-plot(ue, bs)
-time.sleep(1)
+#plot(ue, bs)
+#time.sleep(1)
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
@@ -116,9 +117,11 @@ for cycle in range (0, 1000):
         util.find_ue_by_id(j).update_connection()
         print("\n\n")
 
-    plot(ue, bs)
-    time.sleep(1)
+    #plot(ue, bs)
+    #time.sleep(1)
     env.next_timestep()
+
+env.dqn_engine.save_model("D:\\Users\\Emanuele-PC\\Desktop\\model")
 #env.next_timestep()
 
 

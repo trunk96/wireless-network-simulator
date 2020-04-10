@@ -62,13 +62,20 @@ class DQN:
             target_weights[i] = weights[i]
         self.target_model.set_weights(target_weights)
     
-    def act(self, state):
+    def act(self, state, rsrp):
         self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
         if np.random.random() < self.epsilon:
             return random.randint(0, len(self.env.bs_list)-1)
         print("ACTION VECTOR FROM DQN %s" %self.model.predict(state)[0])
-        return np.argmax(self.model.predict(state)[0])
+        prediction = self.model.predict(state)[0]
+
+        #this to avoid that the choosen AP is not visible by the user
+        actual_prediction = []
+        for i in range(0, len(prediction)):
+            if i in rsrp:
+                actual_prediction.append(prediction[i])
+        return np.argmax(actual_prediction)
 
     def save_model(self, path):
         self.model.save(path)   
