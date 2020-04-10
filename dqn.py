@@ -17,7 +17,8 @@ class DQN:
         self.learning_rate = learning_rate
         self.tau = tau
 
-        # the input of the neural network is the occupancy of each base station
+        # the input of the neural network is the occupancy of each base station and the amount of resources needed to satisfy user requirements
+        #self.input_count = len(env.bs_list) * 2
         self.input_count = len(env.bs_list)
         # the output of the neural network is the Q-values corresponding to the actions
         # the action corresponds to which base station will accept the incoming connection from the UE

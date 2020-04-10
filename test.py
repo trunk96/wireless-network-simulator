@@ -72,7 +72,7 @@ def plot(ue, bs):
 env = environment.wireless_environment(1000)
 ue = []
 bs = []
-for i in range(0, 1):
+for i in range(0, 10):
     id = env.insert_ue(4, speed = 100, direction = random.randint(0, 359))
     ue.append(id)
 
@@ -104,16 +104,21 @@ for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
 
 plot(ue, bs)
-time.sleep(5)
+time.sleep(1)
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
+for cycle in range (0, 1000):
+    print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
+    random.shuffle(ue)
+    for j in ue:
+        print("\n\n")
+        util.find_ue_by_id(j).update_connection()
+        print("\n\n")
 
-random.shuffle(ue)
-for j in ue:
-    util.find_ue_by_id(j).update_connection()
-
-plot(ue, bs)
+    plot(ue, bs)
+    time.sleep(1)
+    env.next_timestep()
 #env.next_timestep()
 
 

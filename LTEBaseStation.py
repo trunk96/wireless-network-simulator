@@ -119,6 +119,8 @@ class LTEBaseStation:
         if self.resource_utilization_counter % self.T == 0:
             self.resource_utilization_counter = 0
 
+    def new_state(self):
+        return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.allocated_prb)/(self.total_prb*self.T)
         
     
 

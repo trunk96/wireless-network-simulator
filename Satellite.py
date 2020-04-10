@@ -162,3 +162,6 @@ class Satellite:
         """
 
         return sum(self.resource_utilization_array)/(self.T*self.total_symbols)
+
+    def new_state(self):
+        return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.frame_utilization)/(self.total_symbols*self.T)

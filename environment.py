@@ -7,6 +7,7 @@ import util
 from concurrent.futures import ThreadPoolExecutor
 import math
 import random
+import numpy as np
 
 
 class wireless_environment:
@@ -116,11 +117,26 @@ class wireless_environment:
         state = [1.0] * len(self.bs_list)
         for elem in rsrp:
             state[elem] = util.find_bs_by_id(elem).compute_rbur() 
+        state = np.array(state)
+        state = np.reshape(state, (-1, len(self.bs_list)))
         action = self.dqn_engine.act(state)  
         print("ACTION SELECTED BY DQN: %s" %(action))
         bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
+        reward = self.compute_reward(state, action, bitrate, data_rate, rsrp)
+        new_state = state.copy()
+        new_state[0][action] = util.find_bs_by_id(action).new_state()
+        self.dqn_engine.remember(state.copy(), action, reward, new_state.copy(), False)
+        self.dqn_engine.replay()
         return action, bitrate
 
+    def compute_reward(self, state, action, bitrate, desired_data_rate, rsrp):
+        if action in rsrp:
+            if bitrate > desired_data_rate:
+                return 10000
+            else:
+                return desired_data_rate*(bitrate - desired_data_rate)*100 
+        else:
+            return -10000
 
     def next_timestep(self):
         with ThreadPoolExecutor(max_workers=len(self.ue_list)) as executor:
