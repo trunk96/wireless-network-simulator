@@ -24,6 +24,7 @@ class user_equipment:
         self.env = env
         self.speed = speed #how much distance we made in one step
         self.direction = direction #in degrees from the x axis (0 horizontal movement, 90 vertical movement)
+        self.old_position = (starting_position[0], starting_position[1])
 
     
     def move(self):
@@ -157,9 +158,11 @@ class user_equipment:
             self.disconnect_from_bs()
             self.connect_to_bs()
 
-        print("[CONNECTION_UPDATE]: User ID %s has updated its connection to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
+        print("[CONNECTION_UPDATE]: Old position %s\nNew position %s\nUser ID %s has updated its connection to base_station %s with a data rate of %s/%s Mbps" %(self.old_position, self.current_position, self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
 
     def next_timestep(self):
+        self.old_position = self.current_position
         self.move()
+        
 
     

@@ -41,9 +41,9 @@ def plot(ue, bs):
     y = []
     x1 =[]
     y1 = []
-    for i in ue:
-        x.append(util.find_ue_by_id(i).current_position[0])
-        y.append(util.find_ue_by_id(i).current_position[1])
+    for i in range(0, len(ue)):
+        x.append(util.find_ue_by_id(ue[i]).current_position[0])
+        y.append(util.find_ue_by_id(ue[i]).current_position[1])
 
     for j in bs:
         x1.append(util.find_bs_by_id(j).position[0])
@@ -53,8 +53,8 @@ def plot(ue, bs):
     ax.set_xlim(0, env.x_limit)
     ax.set_ylim(0, env.y_limit)
     plot1 = ax.scatter(x, y, color = "tab:blue", label = "UE")
-    for i in ue:
-        a = ax.annotate(i, (x[i], y[i]))
+    for i in range(0, len(ue)):
+        a = ax.annotate(str(ue[i]), (x[i], y[i]))
         ann1.append(a)
 
     plot2 = ax.scatter(x1, y1, color = "tab:orange", label = "BS")
@@ -73,7 +73,7 @@ env = environment.wireless_environment(1000)
 ue = []
 bs = []
 for i in range(0, 10):
-    id = env.insert_ue(4, speed = 100, direction = random.randint(0, 359))
+    id = env.insert_ue(4, speed = 10, direction = random.randint(0, 359))
     ue.append(id)
 
 #sat_id = env.place_SAT_base_station((1,1,1))
