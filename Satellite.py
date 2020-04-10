@@ -60,7 +60,7 @@ class Satellite:
         #compute SINR
         interference = 0
         for elem in rsrp:
-            if elem != self.bs_id and elem.bs_type == "sat":
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type == "sat":
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
             
         thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000000
