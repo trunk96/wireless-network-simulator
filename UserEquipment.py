@@ -109,7 +109,8 @@ class user_equipment:
         elif len(available_bs) == 1:
             #this means there is only one available bs, so we have to connect to it
             bs = list(available_bs.keys())[0]
-            self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
+            #self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
+            self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
             self.current_bs = bs
         else:
             if self.MATLAB == 1:
@@ -119,9 +120,10 @@ class user_equipment:
                 #ret = eng.nomefunzione(arg1, arg2,...,argn)
                 return
             else:
-                bs = max(available_bs, key = available_bs.get)
-                self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
-                self.current_bs = bs
+                #bs = max(available_bs, key = available_bs.get)
+                #self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                self.current_bs, self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                #self.current_bs = bs
         print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%sMbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
 
 

@@ -3,11 +3,13 @@ import util
 import Satellite
 import matplotlib.pyplot as plt
 import numpy as np
+import dqn
 
 
 env = environment.wireless_environment(1000)
+
 ue = []
-for i in range(0, 20):
+for i in range(0, 1):
     id = env.insert_ue(4)
     ue.append(id)
 
@@ -18,6 +20,10 @@ nr_bs = env.place_NR_base_station((200, 200, 40), 800, 2, 20, 16, 3, 100)
 nr_bs1 = env.place_NR_base_station((800, 200, 40), 800, 2, 20, 16, 3, 100)
 
 nr_bs2 = env.place_NR_base_station((500, 800, 40), 800, 2, 20, 16, 3, 100)
+
+
+env.setup_dqn()
+
 
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
 for j in ue:

@@ -128,7 +128,7 @@ class NRBaseStation:
         r = r / (10 * (2**self.numerology))
         #print(r)
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
-        #print(N_prb)
+        print("Allocated %s PRB" %N_prb)
         return N_prb, r
 
     #this method will be called by an UE that tries to connect to this BS.

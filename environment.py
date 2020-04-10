@@ -2,6 +2,7 @@ import UserEquipment as ue
 import LTEBaseStation as LTEbs
 import NRBaseStation as NRbs
 import Satellite as SATbs
+import dqn
 import util
 from concurrent.futures import ThreadPoolExecutor
 import math
@@ -104,6 +105,22 @@ class wireless_environment:
                 if (res > util.MIN_RSRP):
                     rsrp[i] = res
        return rsrp
+
+
+    def setup_dqn(self):
+        self.dqn_engine = dqn.DQN(self)
+    
+    def request_connection(self, ue_id, data_rate, rsrp):
+        # here a connection request from user ue_id arrives. We have to interrogate the DQN in order 
+        # to find the correct BS the user have to connect
+        state = [1.0] * len(self.bs_list)
+        for elem in rsrp:
+            state[elem] = util.find_bs_by_id(elem).compute_rbur() 
+        action = self.dqn_engine.act(state)  
+        print("ACTION SELECTED BY DQN: %s" %(action))
+        bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
+        return action, bitrate
+
 
     def next_timestep(self):
         with ThreadPoolExecutor(max_workers=len(self.ue_list)) as executor:
