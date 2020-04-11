@@ -68,7 +68,7 @@ class LTEBaseStation:
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
         #with a single PRB we transmit just 1ms each 10ms (that is the frame lenght), so the actual rate is divided by 10
-        r = r / 10
+        #r = r / 10
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
         return N_prb, r
 
@@ -121,6 +121,9 @@ class LTEBaseStation:
 
     def new_state(self):
         return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.allocated_prb)/(self.total_prb*self.T)
+    
+    def get_state(self):
+        return self.total_prb, self.allocated_prb
         
     
 

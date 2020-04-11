@@ -125,7 +125,7 @@ class NRBaseStation:
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
         #based on the numerology choosen and considered the frame duration of 10ms, we transmit 1ms for mu = 0, 0.5ms for mu = 1, 0.25ms for mu = 2, 0.125ms for mu = 3 for each PRB
         #print(r)
-        r = r / (10 * (2**self.numerology))
+        #r = r / (10 * (2**self.numerology))
         #print(r)
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
         return N_prb, r
@@ -139,6 +139,7 @@ class NRBaseStation:
 
         if self.total_prb - self.allocated_prb <= N_prb:
             N_prb = self.total_prb - self.allocated_prb
+            print("not enough")
 
         if ue_id not in self.ue_pb_allocation:
             self.ue_pb_allocation[ue_id] = N_prb
@@ -182,3 +183,6 @@ class NRBaseStation:
         
     def new_state(self):
         return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.allocated_prb)/(self.total_prb*self.T)
+    
+    def get_state(self):
+        return self.total_prb, self.allocated_prb

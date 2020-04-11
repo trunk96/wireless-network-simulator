@@ -7,8 +7,8 @@ import numpy as np
 import random
 import time
 
-plt.ion()
-fig, ax = plt.subplots()
+#plt.ion()
+#fig, ax = plt.subplots()
 run = 0
 plot1 = []
 plot2 = []
@@ -29,9 +29,9 @@ def plot(ue, bs):
         x = np.array([])
         x = np.reshape(x, (-1, 2))
         for elem in plot1:
-            elem.set_offsets(x.copy())
+            elem.set_offsets(x)
         for elem in plot2:
-            elem.set_offsets(x.copy())
+            elem.set_offsets(x)
         for a in ann1:
             try:
                 a.remove()
@@ -141,8 +141,8 @@ def plot_old(ue, bs):
 env = environment.wireless_environment(1000)
 ue = []
 bs = []
-for i in range(0, 200):
-    id = env.insert_ue(4, speed = 10, direction = random.randint(0, 359))
+for i in range(0, 50):
+    id = env.insert_ue(10, speed = 10, direction = random.randint(0, 359))
     ue.append(id)
 
 #sat_id = env.place_SAT_base_station((1,1,1))
@@ -166,16 +166,16 @@ sat = env.place_SAT_base_station((500, 500, 35800000))
 bs.append(sat)
 env.setup_dqn()
 
-plot(ue, bs)
-plt.pause(0.1)
+#plot(ue, bs)
+#plt.pause(0.1)
 #time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
 random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
 
-plot(ue, bs)
-plt.pause(0.1)
+#plot(ue, bs)
+#plt.pause(0.1)
 #time.sleep(1)
 env.next_timestep()
 
@@ -188,8 +188,8 @@ for cycle in range (0, 1000):
         util.find_ue_by_id(j).update_connection()
         print("\n\n")
 
-    plot(ue, bs)
-    plt.pause(0.1)
+   #plot(ue, bs)
+    #plt.pause(0.1)
     #time.sleep(1)
     env.next_timestep()
 

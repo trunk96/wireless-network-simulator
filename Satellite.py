@@ -38,7 +38,7 @@ class Satellite:
     guard_space = 64  # fixed [symbols]
     total_users = 0
     frame_duration = 2 # lenght of the frame in milliseconds
-    total_symbols = frame_length - 288*2 - 64*2 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
+    total_symbols = (frame_length - 288*2 - 64*2)/3 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
     frame_utilization = 0  # allocated resources
     ue_allocation = {}
 
@@ -118,7 +118,7 @@ class Satellite:
         if self.ue_allocation[ue_id] != 0:
             diff = N_symb + self.tb_header - self.ue_allocation[ue_id] 
         else:
-            diff = N_symb  +self.tb_header + self.guard_space
+            diff = N_symb + self.tb_header + self.guard_space
         
         if self.total_symbols - self.frame_utilization >= diff:
             #there is the place for more symbols allocation (or less if diff is negative)
@@ -134,7 +134,7 @@ class Satellite:
                 diff = 0
             elif self.ue_allocation[ue_id] == 0:
                 self.frame_utilization += diff
-                self.ue_allocation[ue_id] = diff - self.tb_header -self.guard_space
+                self.ue_allocation[ue_id] = diff - self.guard_space
             else:
                 self.frame_utilization += diff
                 self.ue_allocation[ue_id] += diff
@@ -165,3 +165,7 @@ class Satellite:
 
     def new_state(self):
         return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.frame_utilization)/(self.total_symbols*self.T)
+    
+
+    def get_state(self):
+        return self.total_symbols, self.frame_utilization

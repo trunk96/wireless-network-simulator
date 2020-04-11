@@ -114,25 +114,39 @@ class wireless_environment:
     def request_connection(self, ue_id, data_rate, rsrp):
         # here a connection request from user ue_id arrives. We have to interrogate the DQN in order 
         # to find the correct BS the user have to connect
-        state = [-1.0] * len(self.bs_list)
+        
+        state = [-1.0] * (len(self.bs_list) + len(self.ue_list))
         for elem in rsrp:
-            state[elem] = util.find_bs_by_id(elem).compute_rbur() 
+            t, r = util.find_bs_by_id(elem).get_state()
+            state[elem] = r/t
+
+        for i in range(len(self.bs_list), len(self.bs_list)+len(self.ue_list)):
+            state[i] = util.find_ue_by_id(i-len(self.bs_list)).actual_data_rate 
+
+        print(state[0:len(self.bs_list)])
+
         state = np.array(state)
-        state = np.reshape(state, (-1, len(self.bs_list)))
+        state = np.reshape(state, (-1, len(self.bs_list)+len(self.ue_list)))
+
         action = self.dqn_engine.act(state, rsrp)  
         print("ACTION SELECTED BY DQN: %s" %(action))
+
         bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
         reward = self.compute_reward(state, action, bitrate, data_rate, rsrp)
+
         new_state = state.copy()
         new_state[0][action] = util.find_bs_by_id(action).new_state()
+        new_state[0][len(self.bs_list)+ue_id] = bitrate
+
         self.dqn_engine.remember(state.copy(), action, reward, new_state.copy(), False)
         self.dqn_engine.replay()
+
         return action, bitrate
 
     def compute_reward(self, state, action, bitrate, desired_data_rate, rsrp):
         if action in rsrp:
             if bitrate > desired_data_rate:
-                return 10000
+                return 100*desired_data_rate
             else:
                 return desired_data_rate*(bitrate - desired_data_rate)*100 
         else:

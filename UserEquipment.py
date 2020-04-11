@@ -15,6 +15,7 @@ class user_equipment:
     actual_data_rate = 0
     MATLAB = 0
     RANDOM = 0
+    epsilon = 0.1
 
     def __init__ (self, requested_bitrate, ue_id, starting_position, env, speed, direction):
         self.ue_id = ue_id
@@ -150,6 +151,10 @@ class user_equipment:
             self.actual_data_rate = util.find_bs_by_id(self.current_bs).update_connection(self.ue_id, self.requested_bitrate, available_bs)
             if self.actual_data_rate < self.requested_bitrate:
                 print("[POOR BASE STATION]: User ID %s has a poor connection to its base station (actual data rate is %s/%s Mbps)" %(self.ue_id, self.actual_data_rate, self.requested_bitrate))
+                self.disconnect_from_bs()
+                self.connect_to_bs()
+            elif random.random() < self.epsilon:
+                print("[RANDOM DISCONNECTION]: User ID %s was randomly disconnected from its base station (actual data rate is %s/%s Mbps)" %(self.ue_id, self.actual_data_rate, self.requested_bitrate))
                 self.disconnect_from_bs()
                 self.connect_to_bs()
         else:
