@@ -64,13 +64,16 @@ def plot(ue, bs):
         for j in range(0, len(bs)):
             if util.find_ue_by_id(ue[i]).current_bs == j:
                 plot1.append(ax.scatter(x_ue[i], y_ue[i], color = colors[j]))
+                break
+        else:
+            plot1.append(ax.scatter(x_ue[i], y_ue[i], color = "tab:grey"))
 
     for i in range(0, len(ue)):
         a = ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
         ann1.append(a)
 
     for j in range(0, len(bs)):
-        plot2.append(ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s"))
+        plot2.append(ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400))
     
     for j in range(0, len(bs)):
         a = ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))
@@ -138,7 +141,7 @@ def plot_old(ue, bs):
 env = environment.wireless_environment(1000)
 ue = []
 bs = []
-for i in range(0, 100):
+for i in range(0, 200):
     id = env.insert_ue(4, speed = 10, direction = random.randint(0, 359))
     ue.append(id)
 
