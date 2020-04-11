@@ -133,7 +133,7 @@ class wireless_environment:
 
         bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
         reward = self.compute_reward(state, action, bitrate, data_rate, rsrp, ue_id)
-
+        print("REWARD RECEIVED BY DQN: %s" %(reward))
         new_state = state.copy()
         new_state[0][action] = util.find_bs_by_id(action).new_state()
         new_state[0][len(self.bs_list)+ue_id] = bitrate
@@ -149,14 +149,14 @@ class wireless_environment:
             if bitrate > desired_data_rate:
                 # in case the DQN made a correct allocation I do not want the user occupies too much resources, so if the allocated resources
                 # for the users are too much I will discount the reward of a proportional value
-                return desired_data_rate/(allocated - total)
+                return desired_data_rate/(allocated/total)
             else:
-                if allocated != 0:
+                if allocated > 0:
                     # in case of a bad allocation, I do not want again that the user occupies too much resources (better if it is allocated to
                     # one of its neighbor base stations)
-                    return desired_data_rate * (bitrate - desired_data_rate) * (allocated - total)
+                    return desired_data_rate * (bitrate - desired_data_rate) * (allocated/total)
                 else:
-                    return desired_data_rate * (bitrate - desired_data_rate)
+                    return (desired_data_rate**2) * (bitrate - desired_data_rate)
         else:
             # it should never go here (there are checks on actions in the argmax)
             return -10000

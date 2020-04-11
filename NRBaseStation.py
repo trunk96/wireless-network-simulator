@@ -139,7 +139,6 @@ class NRBaseStation:
 
         if self.total_prb - self.allocated_prb <= N_prb:
             N_prb = self.total_prb - self.allocated_prb
-            print("not enough")
 
         if ue_id not in self.ue_pb_allocation:
             self.ue_pb_allocation[ue_id] = N_prb
