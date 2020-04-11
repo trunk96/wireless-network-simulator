@@ -132,7 +132,7 @@ class wireless_environment:
         print("ACTION SELECTED BY DQN: %s" %(action))
 
         bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
-        reward = self.compute_reward(state, action, bitrate, data_rate, rsrp)
+        reward = self.compute_reward(state, action, bitrate, data_rate, rsrp, ue_id)
 
         new_state = state.copy()
         new_state[0][action] = util.find_bs_by_id(action).new_state()
@@ -143,19 +143,35 @@ class wireless_environment:
 
         return action, bitrate
 
-    def compute_reward(self, state, action, bitrate, desired_data_rate, rsrp):
+    def compute_reward(self, state, action, bitrate, desired_data_rate, rsrp, ue_id):
         if action in rsrp:
+            allocated, total = util.find_bs_by_id(action).get_connection_info(ue_id)
             if bitrate > desired_data_rate:
-                return 100*desired_data_rate
+                # in case the DQN made a correct allocation I do not want the user occupies too much resources, so if the allocated resources
+                # for the users are too much I will discount the reward of a proportional value
+                return desired_data_rate/(allocated - total)
             else:
-                return desired_data_rate*(bitrate - desired_data_rate)*100 
+                if allocated != 0:
+                    # in case of a bad allocation, I do not want again that the user occupies too much resources (better if it is allocated to
+                    # one of its neighbor base stations)
+                    return desired_data_rate * (bitrate - desired_data_rate) * (allocated - total)
+                else:
+                    return desired_data_rate * (bitrate - desired_data_rate)
         else:
+            # it should never go here (there are checks on actions in the argmax)
             return -10000
 
     def next_timestep(self):
+        '''
+        in case we want to use threads...
+
         with ThreadPoolExecutor(max_workers=len(self.ue_list)) as executor:
             for ue in self.ue_list:
                 thread = executor.submit(ue.next_timestep())
+        '''
+
+        for ue in self.ue_list:
+            ue.next_timestep()
         for bs in self.bs_list:
             bs.next_timestep()
        

@@ -169,3 +169,6 @@ class Satellite:
 
     def get_state(self):
         return self.total_symbols, self.frame_utilization
+    
+    def get_connection_info(self, ue_id):
+        return self.ue_allocation[ue_id], self.total_symbols

@@ -186,3 +186,6 @@ class NRBaseStation:
     
     def get_state(self):
         return self.total_prb, self.allocated_prb
+    
+    def get_connection_info(self, ue_id):
+        return self.ue_pb_allocation[ue_id], self.total_prb
