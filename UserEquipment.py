@@ -134,7 +134,7 @@ class user_equipment:
             util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
             print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, self.current_bs))
             self.current_bs = None
-            self.actual_data_rate = None
+            #self.actual_data_rate = 0
         return
         
 

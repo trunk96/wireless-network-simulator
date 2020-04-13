@@ -119,18 +119,21 @@ class wireless_environment:
         # here a connection request from user ue_id arrives. We have to interrogate the DQN in order 
         # to find the correct BS the user have to connect
         
-        state = [-1.0] * (len(self.bs_list) + len(self.ue_list))
+        state = [-1.0] * (len(self.bs_list) * 2 + 1)
         for elem in rsrp:
             t, r = util.find_bs_by_id(elem).get_state()
             state[elem] = r/t
+        
+        for i in range(len(self.bs_list), len(self.bs_list)*2):
+            if i - len(self.bs_list) in rsrp:
+                state[i] = rsrp[i-len(self.bs_list)]
 
-        for i in range(len(self.bs_list), len(self.bs_list)+len(self.ue_list)):
-            state[i] = util.find_ue_by_id(i-len(self.bs_list)).actual_data_rate 
+        state[len(self.bs_list)*2] = util.find_ue_by_id(ue_id).actual_data_rate 
 
-        print(state[0:len(self.bs_list)])
+        print([state[0:len(self.bs_list)], state[len(self.bs_list):len(self.bs_list)*2], state[len(self.bs_list*2)]])
 
         state = np.array(state)
-        state = np.reshape(state, (-1, len(self.bs_list)+len(self.ue_list)))
+        state = np.reshape(state, (-1, len(self.bs_list)*2+1))
 
         action = self.dqn_engine.act(state, rsrp)  
         print("ACTION SELECTED BY DQN: %s" %(action))
@@ -140,7 +143,7 @@ class wireless_environment:
         print("REWARD RECEIVED BY DQN: %s" %(reward))
         new_state = state.copy()
         new_state[0][action] = util.find_bs_by_id(action).new_state()
-        new_state[0][len(self.bs_list)+ue_id] = bitrate
+        new_state[0][len(self.bs_list)] = bitrate
 
         self.dqn_engine.remember(state.copy(), action, reward, new_state.copy(), False)
         self.dqn_engine.replay()

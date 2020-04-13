@@ -23,9 +23,8 @@ class DQN:
         self.learning_rate = learning_rate
         self.tau = tau
 
-        # the input of the neural network is the occupancy of each base station and the amount of resources needed to satisfy user requirements
-        #self.input_count = len(env.bs_list) * 2
-        self.input_count = len(env.bs_list) + len(env.ue_list)
+        # the input of the neural network is the occupancy of each base station and the actual bitrate of the UE requesting the connection
+        self.input_count = (len(env.bs_list) * 2) + 1
         # the output of the neural network is the Q-values corresponding to the actions
         # the action corresponds to which base station will accept the incoming connection from the UE
         self.output_count = len(env.bs_list)
@@ -36,9 +35,9 @@ class DQN:
     
     def create_model(self):
         model = K.models.Sequential()
-        model.add(K.layers.Dense(256, input_dim = self.input_count, activation = "relu"))
-        model.add(K.layers.Dense(512, activation = "relu"))
-        model.add(K.layers.Dense(256, activation = "relu"))
+        model.add(K.layers.Dense(24, input_dim = self.input_count, activation = "relu"))
+        model.add(K.layers.Dense(48, activation = "relu"))
+        model.add(K.layers.Dense(24, activation = "relu"))
         model.add(K.layers.Dense(self.output_count))
         model.compile(loss = "mean_squared_error", optimizer = K.optimizers.Adam(lr=self.learning_rate))
         return model
