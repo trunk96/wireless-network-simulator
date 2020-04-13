@@ -22,6 +22,8 @@ class DQN:
         self.epsilon_decay = epsilon_decay
         self.learning_rate = learning_rate
         self.tau = tau
+        self.target_train_counter = 0
+        self.target_train_steps = 100
 
         # the input of the neural network is the occupancy of each base station and the actual bitrate of the UE requesting the connection
         self.input_count = (len(env.bs_list) * 2) + 1
@@ -59,6 +61,12 @@ class DQN:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
             self.model.fit(state, target, epochs=1, verbose=0)
+        
+        if self.target_train_counter == self.target_train_steps:
+            self.target_train()
+            self.target_train_counter = 0
+        
+        self.target_train_counter += 1
     
     def target_train(self):
         weights = self.model.get_weights()
