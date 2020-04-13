@@ -60,8 +60,10 @@ class wireless_environment:
     def place_LTE_base_station(self, position, carrier_frequency, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
         
         if (available_bandwidth in LTEbs.LTEbandwidth_prb_lookup):
-            #LTE standard defines 12 subcarriers of 15KHz each, so the pbr_bandwidth is 180KHz
-            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth], 180, 12, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            #  LTE standard defines 12 subcarriers of 15KHz each, so the pbr_bandwidth is 180KHz
+            #  LTEbandwidth_prb_lookup defines the number of blocks of 180KHz available in the specified bandwidth,
+            #  so we have to multiply by the number of time slots (sub-frames in LTE terminoloty) in a time frame
+            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth]*10, 180, 12, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
         
@@ -80,7 +82,9 @@ class wireless_environment:
 
         if available_bandwidth in NRbs.NRbandwidth_prb_lookup[numerology][fr]:
             prb_size = 15*(2**numerology)*12 #15KHz*12subcarriers for numerology 0, 30KHz*12subcarriers for numerology 1, etc.
-            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth], prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            #  NRbandwidth_prb_lookup defines the number of blocks of 180KHz available in the specified bandwidth with a certain numerology,
+            #  so we have to multiply by the number of time slots (sub-frames in LTE terminoloty) in a time frame
+            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("The choosen bandwidth is not present in 5G NR standard with such numerology and frequency range")
 

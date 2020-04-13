@@ -7,8 +7,12 @@ import numpy as np
 import random
 import time
 
-plt.ion()
-fig, ax = plt.subplots()
+
+PLOT = False
+
+if PLOT:
+    plt.ion()
+    fig, ax = plt.subplots()
 run = 0
 plot1 = []
 plot2 = []
@@ -166,21 +170,23 @@ sat = env.place_SAT_base_station((500, 500, 35800000))
 bs.append(sat)
 env.setup_dqn()
 
-plot(ue, bs)
-plt.pause(0.1)
+if PLOT:
+    plot(ue, bs)
+    plt.pause(0.1)
 #time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
 random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
 
-plot(ue, bs)
-plt.pause(0.1)
+if PLOT:
+    plot(ue, bs)
+    plt.pause(0.1)
 #time.sleep(1)
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 100):
+for cycle in range (0, 1000):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
     for j in ue:
@@ -188,8 +194,9 @@ for cycle in range (0, 100):
         util.find_ue_by_id(j).update_connection()
         print("\n\n")
 
-    plot(ue, bs)
-    plt.pause(0.1)
+    if PLOT:
+        plot(ue, bs)
+        plt.pause(0.1)
     #time.sleep(1)
     env.next_timestep()
 

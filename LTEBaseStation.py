@@ -63,12 +63,12 @@ class LTEBaseStation:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb)]*1000000
+        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb / 10)]*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
         #with a single PRB we transmit just 1ms each 10ms (that is the frame lenght), so the actual rate is divided by 10
-        #r = r / 10
+        r = r / 10
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
         return N_prb, r
 
