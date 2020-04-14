@@ -59,7 +59,7 @@ class wireless_environment:
         
         if (available_bandwidth in LTEbs.LTEbandwidth_prb_lookup):
             #LTE standard defines 12 subcarriers of 15KHz each, so the pbr_bandwidth is 180KHz
-            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth], 180, 12, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth] * 10, 180, 12, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
         
@@ -78,7 +78,7 @@ class wireless_environment:
 
         if available_bandwidth in NRbs.NRbandwidth_prb_lookup[numerology][fr]:
             prb_size = 15*(2**numerology)*12 #15KHz*12subcarriers for numerology 0, 30KHz*12subcarriers for numerology 1, etc.
-            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth], prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("The choosen bandwidth is not present in 5G NR standard with such numerology and frequency range")
 
@@ -115,7 +115,8 @@ class wireless_environment:
         least_loaded = -1
         load = 1
         for elem in available_bs:
-            bs_load = util.find_bs_by_id(elem).compute_rbur()
+            t, a = util.find_bs_by_id(elem).get_state()
+            bs_load = a/t
             if  bs_load < load:
                 load = bs_load
                 least_loaded = elem

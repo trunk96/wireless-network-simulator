@@ -8,7 +8,7 @@ import random
 import time
 
 
-PLOT = False
+PLOT = True
 
 if PLOT:
     plt.ion()
