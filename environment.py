@@ -85,8 +85,6 @@ class wireless_environment:
         self.bs_list.append(new_bs)
         return new_bs.bs_id
 
-
-
     
     #this method shall be called by an UE 
     #that wants to have a measure of the RSRP 
@@ -111,6 +109,19 @@ class wireless_environment:
                 thread = executor.submit(ue.next_timestep())
         for bs in self.bs_list:
             bs.next_timestep()
+
+    
+    def request_connection(self, ue_id, requested_bitrate, available_bs):
+        least_loaded = -1
+        load = 1
+        for elem in available_bs:
+            bs_load = util.find_bs_by_id(elem).compute_rbur()
+            if  bs_load < load:
+                load = bs_load
+                least_loaded = elem
+        
+        data_rate = util.find_bs_by_id(least_loaded).request_connection(ue_id, requested_bitrate, available_bs)
+        return least_loaded, data_rate
        
 
 

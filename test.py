@@ -168,7 +168,7 @@ bs.append(lte_bs1)
 
 sat = env.place_SAT_base_station((500, 500, 35800000))
 bs.append(sat)
-env.setup_dqn()
+
 
 if PLOT:
     plot(ue, bs)
@@ -200,13 +200,6 @@ for cycle in range (0, 1000):
     #time.sleep(1)
     env.next_timestep()
 
-env.dqn_engine.save_model("D:\\Users\\Emanuele-PC\\Desktop\\model")
-#env.next_timestep()
-
-
-
-
-time.sleep(1)
 
 
 #util.find_ue_by_id(id).update_connection()
