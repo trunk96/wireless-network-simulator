@@ -116,17 +116,10 @@ class wireless_environment:
 
     
     def request_connection(self, ue_id, requested_bitrate, available_bs):
-        least_loaded = -1
-        load = 1
-        for elem in available_bs:
-            t, a = util.find_bs_by_id(elem).get_state()
-            bs_load = a/t
-            if  bs_load < load:
-                load = bs_load
-                least_loaded = elem
-        
-        data_rate = util.find_bs_by_id(least_loaded).request_connection(ue_id, requested_bitrate, available_bs)
-        return least_loaded, data_rate
+
+        bs = max(available_bs, key = available_bs.get)
+        data_rate = util.find_bs_by_id(bs).request_connection(ue_id, requested_bitrate, available_bs)
+        return bs, data_rate
        
 
 
