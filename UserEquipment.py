@@ -5,6 +5,12 @@ import math
 
 MAX_STEP = 2000
 
+# service classes for UEs, "class: Mbps"
+ue_class = {
+    0: 10,
+    1: 3
+}
+
 class user_equipment:
     requested_bitrate = 0
     ue_id = None
@@ -15,9 +21,9 @@ class user_equipment:
     actual_data_rate = 0
     MATLAB = 0
     RANDOM = 0
-    epsilon = 0.1
+    epsilon = 0
 
-    def __init__ (self, requested_bitrate, ue_id, starting_position, env, speed, direction):
+    def __init__ (self, requested_bitrate, service_class, ue_id, starting_position, env, speed, direction):
         self.ue_id = ue_id
         self.requested_bitrate = requested_bitrate
         self.current_position = (starting_position[0], starting_position[1])
@@ -26,6 +32,7 @@ class user_equipment:
         self.speed = speed #how much distance we made in one step
         self.direction = direction #in degrees from the x axis (0 horizontal movement, 90 vertical movement)
         self.old_position = (starting_position[0], starting_position[1])
+        self.service_class = service_class
 
     
     def move(self):

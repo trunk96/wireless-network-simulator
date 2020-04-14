@@ -22,7 +22,7 @@ class wireless_environment:
             self.y_limit = n
         self.x_limit = n
     
-    def insert_ue(self, requested_bitrate, starting_position = None, speed = 0, direction = 0):
+    def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
         if starting_position is not None and (starting_position[2] > 10 or starting_position[2] < 1):
             raise Exception("COST-HATA model requires UE height in [1,10]m")
         
@@ -34,9 +34,9 @@ class wireless_environment:
             ue_id = len(self.ue_list)
         
         if starting_position is None:
-            new_ue = ue.user_equipment(requested_bitrate, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed, direction)
+            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed, direction)
         else: 
-            new_ue = ue.user_equipment(requested_bitrate, ue_id, starting_position, self, speed, direction)
+            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, starting_position, self, speed, direction)
         
         if (ue_id == len(self.ue_list)):
             self.ue_list.append(new_ue)
