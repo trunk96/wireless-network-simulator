@@ -24,10 +24,11 @@ class wireless_environment:
             self.y_limit = n
         self.x_limit = n
     
-    def insert_ue(self, requested_bitrate, starting_position = None, speed = 0, direction = 0):
+    def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
         if starting_position is not None and (starting_position[2] > 10 or starting_position[2] < 1):
             raise Exception("COST-HATA model requires UE height in [1,10]m")
-        
+        elif ue_class not in ue.ue_class:
+            raise Exception("Invalid service class for the UE, available service classes are: %s" %(ue.ue_class.keys()))
         ue_id = -1
         
         if None in self.ue_list:
@@ -36,9 +37,9 @@ class wireless_environment:
             ue_id = len(self.ue_list)
         
         if starting_position is None:
-            new_ue = ue.user_equipment(requested_bitrate, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed, direction)
+            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed, direction)
         else: 
-            new_ue = ue.user_equipment(requested_bitrate, ue_id, starting_position, self, speed, direction)
+            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, starting_position, self, speed, direction)
         
         if (ue_id == len(self.ue_list)):
             self.ue_list.append(new_ue)
@@ -119,7 +120,7 @@ class wireless_environment:
         # here a connection request from user ue_id arrives. We have to interrogate the DQN in order 
         # to find the correct BS the user have to connect
         
-        state = [-1.0] * (len(self.bs_list) * 2 + 1)
+        state = [-1.0] * (len(self.bs_list) * 2 + 2)
         for elem in rsrp:
             t, r = util.find_bs_by_id(elem).get_state()
             state[elem] = r/t
@@ -129,6 +130,7 @@ class wireless_environment:
                 state[i] = rsrp[i-len(self.bs_list)]
 
         state[len(self.bs_list)*2] = util.find_ue_by_id(ue_id).actual_data_rate 
+        state[len(self.bs_list)*2 + 1] = util.find_ue_by_id(ue_id).service_class
 
         print([state[0:len(self.bs_list)], state[len(self.bs_list):len(self.bs_list)*2], state[len(self.bs_list*2)]])
 

@@ -2,12 +2,6 @@ import environment
 import util
 import random
 from collections import deque
-
-import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
-
 import keras as K
 import numpy as np
 
@@ -26,7 +20,7 @@ class DQN:
         self.target_train_steps = 100
 
         # the input of the neural network is the occupancy of each base station and the actual bitrate of the UE requesting the connection
-        self.input_count = (len(env.bs_list) * 2) + 1
+        self.input_count = (len(env.bs_list) * 2) + 2
         # the output of the neural network is the Q-values corresponding to the actions
         # the action corresponds to which base station will accept the incoming connection from the UE
         self.output_count = len(env.bs_list)

@@ -13,8 +13,12 @@ PLOT = True
 env = environment.wireless_environment(1000)
 ue = []
 bs = []
-for i in range(0, 50):
-    id = env.insert_ue(10, speed = 10, direction = random.randint(0, 359))
+for i in range(0, 100):
+    if i < 50:
+        id = env.insert_ue(0, speed = 10, direction = random.randint(0, 359))
+    else:
+        id = env.insert_ue(1, speed = 10, direction = random.randint(0, 359))
+
     ue.append(id)
 
 #sat_id = env.place_SAT_base_station((1,1,1))
