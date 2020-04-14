@@ -31,14 +31,14 @@ class Satellite:
     #rsrp = None
     #rbur = None  # resource block utilization ration
 
- 
+
     frame_length = 120832  # [120832 symbols]
     rb_length = 288  # reference burst length, fixed [symbols]
     tb_header = 280  # traffic burst header, fixed [symbols]
     guard_space = 64  # fixed [symbols]
     total_users = 0
     frame_duration = 2 # lenght of the frame in milliseconds
-    total_symbols = frame_length - 288*2 - 64*2 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
+    total_symbols = (frame_length - 288*2 - 64*2)/3 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
     frame_utilization = 0  # allocated resources
     ue_allocation = {}
 
@@ -60,7 +60,7 @@ class Satellite:
         #compute SINR
         interference = 0
         for elem in rsrp:
-            if elem != self.bs_id and elem.bs_type == "sat":
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type == "sat":
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
             
         thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000000
@@ -71,7 +71,7 @@ class Satellite:
 
         r_64 = r * 64 # we can transmit in blocks of 64 symbols
 
-        n_symb = math.ceil(data_rate*1000000 / r_64) * 64
+        n_symb = math.ceil(data_rate*1000000 / r_64)
         return n_symb, r
 
 
@@ -83,28 +83,26 @@ class Satellite:
         # in the frame utilization but not in the ue_allocation dictionary
 
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
-        #print(N_symb)
-        if self.total_symbols - self.frame_utilization <= self.tb_header + N_symb + self.guard_space:
-            N_symb = self.total_symbols - self.frame_utilization - self.guard_space - self.tb_header
-            if N_symb <= 0:
-                N_symb = 0
+        if self.total_symbols - self.frame_utilization <= self.tb_header + N_symb*64 + self.guard_space:
+            N_symb = math.floor((self.total_symbols - self.frame_utilization - self.guard_space - self.tb_header)/64)
+            
+            if N_symb <= 0: #we can allocate at least 1 block of 64 symbols
                 self.ue_allocation[ue_id] = 0
                 return 0
 
         if ue_id not in self.ue_allocation:
-            self.ue_allocation[ue_id] = self.tb_header + N_symb
-            self.frame_utilization += self.tb_header + N_symb + self.guard_space
+            self.ue_allocation[ue_id] = self.tb_header + N_symb*64 + self.guard_space
+            self.frame_utilization += self.tb_header + N_symb*64 + self.guard_space
         else:
-            self.frame_utilization -= self.ue_allocation[ue_id] + self.guard_space
-            self.ue_allocation[ue_id] = self.tb_header + N_symb
-            self.frame_utilization += self.tb_header + N_symb + self.guard_space   
+            self.frame_utilization -= self.ue_allocation[ue_id]
+            self.ue_allocation[ue_id] = self.tb_header + N_symb*64 + self.guard_space
+            self.frame_utilization += self.ue_allocation[ue_id]   
         #print(r)
         #print(N_symb)
-        return r*N_symb/1000000 #we want a data rate in Mbps, not in bps
+        return (r*N_symb*64)/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
-        N_symb_plus_header = self.ue_allocation[ue_id]
-        self.frame_utilization -= N_symb_plus_header + self.guard_space
+        self.frame_utilization -= self.ue_allocation[ue_id]
         del self.ue_allocation[ue_id]
 
     
@@ -115,10 +113,30 @@ class Satellite:
         # If there is no room for actual data symbols allocation (in the latter case), we still must have self.ue_allocation[ue_id]=0, since it is useless to allocate just the header and the guard space.
 
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
+        
+        if self.total_symbols - (self.frame_utilization - self.ue_allocation[ue_id]) >= N_symb*64 + self.tb_header + self.guard_space:
+            # there is room for allocation
+            self.frame_utilization -= self.ue_allocation[ue_id]
+            self.ue_allocation[ue_id] = N_symb*64 + self.tb_header +self.guard_space
+            self.frame_utilization += self.ue_allocation[ue_id]
+        
+        else:
+            # no room for the entire allocation, trying to allocate at least a part
+            N_symb = math.floor((self.total_symbols - (self.frame_utilization - self.ue_allocation[ue_id]) - self.tb_header - self.guard_space)/64)
+            if N_symb <= 0:
+                self.ue_allocation[ue_id] = 0
+                return 0
+            self.frame_utilization -= self.ue_allocation[ue_id]
+            self.ue_allocation[ue_id] = self.tb_header + N_symb*64 + self.guard_space
+            self.frame_utilization += self.ue_allocation[ue_id]
+
+        return (r*N_symb*64)/1000000 #in Mbps, not in bps
+
+        '''
         if self.ue_allocation[ue_id] != 0:
             diff = N_symb + self.tb_header - self.ue_allocation[ue_id] 
         else:
-            diff = N_symb  +self.tb_header + self.guard_space
+            diff = N_symb + self.tb_header + self.guard_space
         
         if self.total_symbols - self.frame_utilization >= diff:
             #there is the place for more symbols allocation (or less if diff is negative)
@@ -134,7 +152,7 @@ class Satellite:
                 diff = 0
             elif self.ue_allocation[ue_id] == 0:
                 self.frame_utilization += diff
-                self.ue_allocation[ue_id] = diff - self.tb_header -self.guard_space
+                self.ue_allocation[ue_id] = diff - self.guard_space
             else:
                 self.frame_utilization += diff
                 self.ue_allocation[ue_id] += diff
@@ -143,6 +161,7 @@ class Satellite:
             return 0
         N_symb = self.ue_allocation[ue_id] - self.tb_header
         return N_symb*r/1000000 #remember that we want the result in Mbps 
+        '''
         
 
     def next_timestep(self):
@@ -162,3 +181,13 @@ class Satellite:
         """
 
         return sum(self.resource_utilization_array)/(self.T*self.total_symbols)
+
+    def new_state(self):
+        return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.frame_utilization)/(self.total_symbols*self.T)
+    
+
+    def get_state(self):
+        return self.total_symbols, self.frame_utilization
+    
+    def get_connection_info(self, ue_id):
+        return self.ue_allocation[ue_id]-self.tb_header-self.guard_space, self.total_symbols

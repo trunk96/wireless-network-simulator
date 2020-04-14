@@ -2,19 +2,92 @@ import environment
 import util
 import Satellite
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import numpy as np
 import random
 import time
 
-plt.ion()
-fig, ax = plt.subplots()
+
+PLOT = False
+
+if PLOT:
+    plt.ion()
+    fig, ax = plt.subplots()
 run = 0
-plot1 = None
-plot2 = None
+plot1 = []
+plot2 = []
 ann1 = []
 ann2 = []
 
+
+
 def plot(ue, bs):
+    global run
+    global ax
+    global fig
+    global plot1
+    global plot2
+    global ann1
+    global ann2
+    if len(plot1) != 0 and len(plot2) != 0 and len(ann1) != 0 and len(ann2) != 0:
+        x = np.array([])
+        x = np.reshape(x, (-1, 2))
+        for elem in plot1:
+            elem.set_offsets(x)
+        for elem in plot2:
+            elem.set_offsets(x)
+        for a in ann1:
+            try:
+                a.remove()
+            except:
+                continue
+        for a in ann2:
+            try:
+                a.remove()
+            except:
+                continue
+    
+    x_ue = []
+    y_ue = []
+    x_bs = []
+    y_bs = []
+
+    ax.set_xlim(0, env.x_limit)
+    ax.set_ylim(0, env.y_limit)
+    colors = cm.rainbow(np.linspace(0, 1, len(bs)))
+
+    for j in bs:
+        x_bs.append(util.find_bs_by_id(j).position[0])
+        y_bs.append(util.find_bs_by_id(j).position[1])
+
+    for i in range(0, len(ue)):
+        x_ue.append(util.find_ue_by_id(ue[i]).current_position[0])
+        y_ue.append(util.find_ue_by_id(ue[i]).current_position[1])
+
+    for i in range(0, len(ue)):
+        for j in range(0, len(bs)):
+            if util.find_ue_by_id(ue[i]).current_bs == j:
+                plot1.append(ax.scatter(x_ue[i], y_ue[i], color = colors[j]))
+                break
+        else:
+            plot1.append(ax.scatter(x_ue[i], y_ue[i], color = "tab:grey"))
+
+    for i in range(0, len(ue)):
+        a = ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
+        ann1.append(a)
+
+    for j in range(0, len(bs)):
+        plot2.append(ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400))
+    
+    for j in range(0, len(bs)):
+        a = ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))
+        ann2.append(a)
+
+    ax.grid(True)
+    fig.canvas.draw()
+
+
+def plot_old(ue, bs):
     global run
     global ax
     global fig
@@ -41,9 +114,9 @@ def plot(ue, bs):
     y = []
     x1 =[]
     y1 = []
-    for i in ue:
-        x.append(util.find_ue_by_id(i).current_position[0])
-        y.append(util.find_ue_by_id(i).current_position[1])
+    for i in range(0, len(ue)):
+        x.append(util.find_ue_by_id(ue[i]).current_position[0])
+        y.append(util.find_ue_by_id(ue[i]).current_position[1])
 
     for j in bs:
         x1.append(util.find_bs_by_id(j).position[0])
@@ -53,8 +126,8 @@ def plot(ue, bs):
     ax.set_xlim(0, env.x_limit)
     ax.set_ylim(0, env.y_limit)
     plot1 = ax.scatter(x, y, color = "tab:blue", label = "UE")
-    for i in ue:
-        a = ax.annotate(i, (x[i], y[i]))
+    for i in range(0, len(ue)):
+        a = ax.annotate(str(ue[i]), (x[i], y[i]))
         ann1.append(a)
 
     plot2 = ax.scatter(x1, y1, color = "tab:orange", label = "BS")
@@ -72,8 +145,8 @@ def plot(ue, bs):
 env = environment.wireless_environment(1000)
 ue = []
 bs = []
-for i in range(0, 20):
-    id = env.insert_ue(4, speed = 100, direction = random.randint(0, 359))
+for i in range(0, 50):
+    id = env.insert_ue(10, speed = 10, direction = random.randint(0, 359))
     ue.append(id)
 
 #sat_id = env.place_SAT_base_station((1,1,1))
@@ -95,31 +168,45 @@ bs.append(lte_bs1)
 
 sat = env.place_SAT_base_station((500, 500, 35800000))
 bs.append(sat)
+env.setup_dqn()
 
-
-plot(ue, bs)
+if PLOT:
+    plot(ue, bs)
+    plt.pause(0.1)
+#time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
 random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
 
-plot(ue, bs)
-time.sleep(5)
+if PLOT:
+    plot(ue, bs)
+    plt.pause(0.1)
+#time.sleep(1)
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
+for cycle in range (0, 1000):
+    print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
+    random.shuffle(ue)
+    for j in ue:
+        print("\n\n")
+        util.find_ue_by_id(j).update_connection()
+        print("\n\n")
 
-random.shuffle(ue)
-for j in ue:
-    util.find_ue_by_id(j).update_connection()
+    if PLOT:
+        plot(ue, bs)
+        plt.pause(0.1)
+    #time.sleep(1)
+    env.next_timestep()
 
-plot(ue, bs)
+env.dqn_engine.save_model("D:\\Users\\Emanuele-PC\\Desktop\\model")
 #env.next_timestep()
 
 
 
 
-time.sleep(100)
+time.sleep(1)
 
 
 #util.find_ue_by_id(id).update_connection()

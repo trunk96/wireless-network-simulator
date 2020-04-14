@@ -63,7 +63,7 @@ class LTEBaseStation:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb)]*1000000
+        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb / 10)]*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
@@ -118,6 +118,15 @@ class LTEBaseStation:
         self.resource_utilization_counter += 1
         if self.resource_utilization_counter % self.T == 0:
             self.resource_utilization_counter = 0
+
+    def new_state(self):
+        return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.allocated_prb)/(self.total_prb*self.T)
+    
+    def get_state(self):
+        return self.total_prb, self.allocated_prb
+    
+    def get_connection_info(self, ue_id):
+        return self.ue_pb_allocation[ue_id], self.total_prb
 
         
     

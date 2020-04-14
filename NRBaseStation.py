@@ -119,7 +119,7 @@ class NRBaseStation:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb)]*1000000
+        thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb / (10 * 2**self.numerology))]*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
@@ -128,7 +128,6 @@ class NRBaseStation:
         r = r / (10 * (2**self.numerology))
         #print(r)
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
-        #print(N_prb)
         return N_prb, r
 
     #this method will be called by an UE that tries to connect to this BS.
@@ -136,6 +135,7 @@ class NRBaseStation:
     def request_connection(self, ue_id, data_rate, rsrp):
         
         N_prb, r = self.compute_nprb_NR(data_rate, rsrp)
+        old_N_prb = N_prb
 
         if self.total_prb - self.allocated_prb <= N_prb:
             N_prb = self.total_prb - self.allocated_prb
@@ -147,7 +147,7 @@ class NRBaseStation:
             self.allocated_prb -= self.ue_pb_allocation[ue_id]
             self.ue_pb_allocation[ue_id] = N_prb
             self.allocated_prb += N_prb 
-        #print(N_prb)       
+        print("Allocated %s/%s PRB" %(N_prb, old_N_prb))    
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
@@ -174,8 +174,17 @@ class NRBaseStation:
 
     #things to do before moving to the next timestep
     def next_timestep(self):
-        print(self.allocated_prb)
+        #print(self.allocated_prb)
         self.resource_utilization_array[self.resource_utilization_counter] = self.allocated_prb
         self.resource_utilization_counter += 1
         if self.resource_utilization_counter % self.T == 0:
             self.resource_utilization_counter = 0
+        
+    def new_state(self):
+        return (sum(self.resource_utilization_array) - self.resource_utilization_array[self.resource_utilization_counter] + self.allocated_prb)/(self.total_prb*self.T)
+    
+    def get_state(self):
+        return self.total_prb, self.allocated_prb
+    
+    def get_connection_info(self, ue_id):
+        return self.ue_pb_allocation[ue_id], self.total_prb
