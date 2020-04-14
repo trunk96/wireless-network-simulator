@@ -1,145 +1,12 @@
 import environment
 import util
 import Satellite
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import numpy as np
 import random
 import time
 
 
 PLOT = True
-
-if PLOT:
-    plt.ion()
-    fig, ax = plt.subplots()
-run = 0
-plot1 = []
-plot2 = []
-ann1 = []
-ann2 = []
-
-
-
-def plot(ue, bs):
-    global run
-    global ax
-    global fig
-    global plot1
-    global plot2
-    global ann1
-    global ann2
-    if len(plot1) != 0 and len(plot2) != 0 and len(ann1) != 0 and len(ann2) != 0:
-        x = np.array([])
-        x = np.reshape(x, (-1, 2))
-        for elem in plot1:
-            elem.set_offsets(x)
-        for elem in plot2:
-            elem.set_offsets(x)
-        for a in ann1:
-            try:
-                a.remove()
-            except:
-                continue
-        for a in ann2:
-            try:
-                a.remove()
-            except:
-                continue
-    
-    x_ue = []
-    y_ue = []
-    x_bs = []
-    y_bs = []
-
-    ax.set_xlim(0, env.x_limit)
-    ax.set_ylim(0, env.y_limit)
-    colors = cm.rainbow(np.linspace(0, 1, len(bs)))
-
-    for j in bs:
-        x_bs.append(util.find_bs_by_id(j).position[0])
-        y_bs.append(util.find_bs_by_id(j).position[1])
-
-    for i in range(0, len(ue)):
-        x_ue.append(util.find_ue_by_id(ue[i]).current_position[0])
-        y_ue.append(util.find_ue_by_id(ue[i]).current_position[1])
-
-    for i in range(0, len(ue)):
-        for j in range(0, len(bs)):
-            if util.find_ue_by_id(ue[i]).current_bs == j:
-                plot1.append(ax.scatter(x_ue[i], y_ue[i], color = colors[j]))
-                break
-        else:
-            plot1.append(ax.scatter(x_ue[i], y_ue[i], color = "tab:grey"))
-
-    for i in range(0, len(ue)):
-        a = ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
-        ann1.append(a)
-
-    for j in range(0, len(bs)):
-        plot2.append(ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400))
-    
-    for j in range(0, len(bs)):
-        a = ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))
-        ann2.append(a)
-
-    ax.grid(True)
-    fig.canvas.draw()
-
-
-def plot_old(ue, bs):
-    global run
-    global ax
-    global fig
-    global plot1
-    global plot2
-    global ann1
-    global ann2
-    if plot1 != None and plot2 != None and len(ann1) != 0 and len(ann2) != 0:
-        x = np.array([])
-        x = np.reshape(x, (-1, 2))
-        plot1.set_offsets(x.copy())
-        plot2.set_offsets(x.copy())
-        for a in ann1:
-            try:
-                a.remove()
-            except:
-                continue
-        for a in ann2:
-            try:
-                a.remove()
-            except:
-                continue
-    x = []
-    y = []
-    x1 =[]
-    y1 = []
-    for i in range(0, len(ue)):
-        x.append(util.find_ue_by_id(ue[i]).current_position[0])
-        y.append(util.find_ue_by_id(ue[i]).current_position[1])
-
-    for j in bs:
-        x1.append(util.find_bs_by_id(j).position[0])
-        y1.append(util.find_bs_by_id(j).position[1])
-
-
-    ax.set_xlim(0, env.x_limit)
-    ax.set_ylim(0, env.y_limit)
-    plot1 = ax.scatter(x, y, color = "tab:blue", label = "UE")
-    for i in range(0, len(ue)):
-        a = ax.annotate(str(ue[i]), (x[i], y[i]))
-        ann1.append(a)
-
-    plot2 = ax.scatter(x1, y1, color = "tab:orange", label = "BS")
-    for j in bs:
-        a = ax.annotate("BS"+str(j), (x1[j], y1[j]))
-        ann2.append(a)
-
-    if run == 0:
-        ax.legend()
-        run += 1
-    ax.grid(True)
-    fig.canvas.draw()
 
 
 env = environment.wireless_environment(1000)
@@ -171,8 +38,8 @@ bs.append(sat)
 
 
 if PLOT:
-    plot(ue, bs)
-    plt.pause(0.1)
+    util.plot(ue, bs, env)
+    #plt.pause(0.1)
 #time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
 random.shuffle(ue)
@@ -180,8 +47,8 @@ for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
 
 if PLOT:
-    plot(ue, bs)
-    plt.pause(0.1)
+    util.plot(ue, bs, env)
+    #plt.pause(0.1)
 #time.sleep(1)
 env.next_timestep()
 
@@ -195,8 +62,8 @@ for cycle in range (0, 1000):
         print("\n\n")
 
     if PLOT:
-        plot(ue, bs)
-        plt.pause(0.1)
+        util.plot(ue, bs, env)
+        #plt.pause(0.1)
     #time.sleep(1)
     env.next_timestep()
 
