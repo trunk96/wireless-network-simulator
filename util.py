@@ -1,20 +1,15 @@
 from enum import Enum
 import math
 import environment
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
 
 class EnvType (Enum):
     RURAL = 0
     SUBURBAN = 1
     URBAN = 2
 
-LTEbandwidth_prb_lookup = {
-    1.4: 6,
-    3: 15,
-    5: 25,
-    10: 50,
-    15: 75,
-    20: 100
-}
 
 MIN_RSRP = -140 #dB
 
@@ -72,3 +67,56 @@ def find_bs_by_id(bs_id):
 
 def find_ue_by_id(ue_id):
     return environment.wireless_environment.ue_list[ue_id]
+
+
+run = 0
+
+
+def plot(ue, bs, env):
+    global ax
+    global fig
+    global run
+    if run == 0:
+        plt.ion()
+        fig, ax = plt.subplots()
+        run = 1
+
+    
+    x_ue = []
+    y_ue = []
+    x_bs = []
+    y_bs = []
+
+    plt.cla()
+
+    ax.set_xlim(0, env.x_limit)
+    ax.set_ylim(0, env.y_limit)
+    colors = cm.rainbow(np.linspace(0, 1, len(bs)))
+
+    for j in bs:
+        x_bs.append(find_bs_by_id(j).position[0])
+        y_bs.append(find_bs_by_id(j).position[1])
+
+    for i in range(0, len(ue)):
+        x_ue.append(find_ue_by_id(ue[i]).current_position[0])
+        y_ue.append(find_ue_by_id(ue[i]).current_position[1])
+
+    for i in range(0, len(ue)):
+        for j in range(0, len(bs)):
+            if find_ue_by_id(ue[i]).current_bs == j:
+                ax.scatter(x_ue[i], y_ue[i], color = colors[j])
+                break
+        else:
+            ax.scatter(x_ue[i], y_ue[i], color = "tab:grey")
+
+    for i in range(0, len(ue)):
+        ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
+
+    for j in range(0, len(bs)):
+        ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
+    
+    for j in range(0, len(bs)):
+        ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))
+
+    ax.grid(True)
+    fig.canvas.draw()
