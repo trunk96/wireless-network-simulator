@@ -188,3 +188,7 @@ class NRBaseStation:
     
     def get_connection_info(self, ue_id):
         return self.ue_pb_allocation[ue_id], self.total_prb
+
+    def reset(self):
+        self.resource_utilization_array = [0] * self.T
+        self.resource_utilization_counter = 0

@@ -21,12 +21,13 @@ class user_equipment:
     actual_data_rate = 0
     MATLAB = 0
     RANDOM = 0
-    epsilon = 0
+    epsilon = 0.05
 
     def __init__ (self, requested_bitrate, service_class, ue_id, starting_position, env, speed, direction):
         self.ue_id = ue_id
         self.requested_bitrate = requested_bitrate
         self.current_position = (starting_position[0], starting_position[1])
+        self.starting_position = (starting_position[0], starting_position[1])
         self.h_m = starting_position[2]
         self.env = env
         self.speed = speed #how much distance we made in one step
@@ -109,6 +110,31 @@ class user_equipment:
         self.direction = self.direction % 360
         self.current_position = (new_x, new_y)
         return self.current_position
+
+    def connect_to_bs_random(self):
+        available_bs = self.env.discover_bs(self.ue_id)
+        if len(available_bs) == 0:
+            print("[NO BASE STATION FOUND]: User ID %s has not found any base station" %(self.ue_id))
+            return
+        elif len(available_bs) == 1:
+            #this means there is only one available bs, so we have to connect to it
+            #bs = list(available_bs.keys())[0]
+            #self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
+            self.current_bs , self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+
+        else:
+            if self.MATLAB == 1:
+                #import function from matlab, in order to select the best action
+
+                #eng = matlab.engine.start_matlab()
+                #ret = eng.nomefunzione(arg1, arg2,...,argn)
+                return
+            else:
+                bs, rsrp = random.choice(list(available_bs.items()))
+                self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                #self.current_bs, self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                self.current_bs = bs
+        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
     
     def connect_to_bs(self):
         available_bs = self.env.discover_bs(self.ue_id)
@@ -148,6 +174,7 @@ class user_equipment:
     
     def update_connection(self):
         if self.current_bs == None:
+            self.connect_to_bs()
             return
 
         available_bs = self.env.discover_bs(self.ue_id)
@@ -175,6 +202,10 @@ class user_equipment:
     def next_timestep(self):
         self.old_position = self.current_position
         self.move()
+
+    def reset(self):
+        self.disconnect_from_bs()
+        self.current_position = self.starting_position
         
 
     

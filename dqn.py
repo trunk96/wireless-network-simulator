@@ -7,7 +7,7 @@ import numpy as np
 
 class DQN:
 
-    def __init__(self, env, memory_len = 2000, gamma = 0.95, epsilon = 1.0, epsilon_min = 0.01, epsilon_decay = 0.995, learning_rate = 0.01, tau = 0.05):
+    def __init__(self, env, memory_len = 2000, gamma = 0.95, epsilon = 1.0, epsilon_min = 0.01, epsilon_decay = 0.995, learning_rate = 0.001, tau = 1):
         self.env = env
         self.memory = deque(maxlen=memory_len)
         self.gamma = gamma
@@ -31,7 +31,8 @@ class DQN:
     
     def create_model(self):
         model = K.models.Sequential()
-        model.add(K.layers.Dense(24, input_dim = self.input_count, activation = "relu"))
+        #model.add(K.layers.Dense(24, input_dim = self.input_count, activation = "relu"))
+        model.add(K.layers.Dense(24, input_dim = self.input_count))
         model.add(K.layers.Dense(48, activation = "relu"))
         model.add(K.layers.Dense(24, activation = "relu"))
         model.add(K.layers.Dense(self.output_count))
@@ -55,18 +56,19 @@ class DQN:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
             self.model.fit(state, target, epochs=1, verbose=0)
-        
+        '''
         if self.target_train_counter == self.target_train_steps:
             self.target_train()
             self.target_train_counter = 0
         
         self.target_train_counter += 1
+        '''
     
     def target_train(self):
         weights = self.model.get_weights()
         target_weights = self.target_model.get_weights()
         for i in range(len(target_weights)):
-            target_weights[i] = weights[i]
+            target_weights[i] = self.tau * weights[i] + (1-self.tau) * target_weights[i]
         self.target_model.set_weights(target_weights)
     
     def act(self, state, rsrp):
@@ -86,6 +88,9 @@ class DQN:
 
     def save_model(self, path):
         self.model.save(path)   
+
+    def load_model(self, path):
+        self.model = K.models.load_model(path)
     
 
 

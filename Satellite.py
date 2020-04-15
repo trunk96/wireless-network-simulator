@@ -38,7 +38,7 @@ class Satellite:
     guard_space = 64  # fixed [symbols]
     total_users = 0
     frame_duration = 2 # lenght of the frame in milliseconds
-    total_symbols = (frame_length - 288*2 - 64*2)/3 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
+    total_symbols = (frame_length - 288*2 - 64*2)//3 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
     frame_utilization = 0  # allocated resources
     ue_allocation = {}
 
@@ -191,3 +191,7 @@ class Satellite:
     
     def get_connection_info(self, ue_id):
         return self.ue_allocation[ue_id]-self.tb_header-self.guard_space, self.total_symbols
+
+    def reset(self):
+        self.resource_utilization_array = [0] * self.T
+        self.resource_utilization_counter = 0

@@ -10,6 +10,8 @@ import random
 import numpy as np
 
 
+
+
 class wireless_environment:
     bs_list = []
     ue_list = []
@@ -17,12 +19,18 @@ class wireless_environment:
     y_limit = None
     env_type = util.EnvType.URBAN
 
-    def __init__(self, n, m = None):
+    #this instance variable will be used just to compute next_state vector for DQN
+    next_ue = None
+    #this instance variable will be used just for indentify training and testing
+    training = False
+
+    def __init__(self, training, n, m = None):
         if m is not None:
             self.y_limit = m
         else:
             self.y_limit = n
         self.x_limit = n
+        self.training = training
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
         if starting_position is not None and (starting_position[2] > 10 or starting_position[2] < 1):
@@ -114,7 +122,11 @@ class wireless_environment:
 
 
     def setup_dqn(self):
-        self.dqn_engine = dqn.DQN(self)
+        if self.training:
+            self.dqn_engine = dqn.DQN(self, tau = 0.05)
+        else:
+            self.dqn_engine = dqn.DQN(self, epsilon = 0, epsilon_min = 0, epsilon_decay = 0)
+            self.dqn_engine.load_model("models\\model.h5")
     
     def request_connection(self, ue_id, data_rate, rsrp):
         # here a connection request from user ue_id arrives. We have to interrogate the DQN in order 
@@ -127,15 +139,15 @@ class wireless_environment:
         
         for i in range(len(self.bs_list), len(self.bs_list)*2):
             if i - len(self.bs_list) in rsrp:
-                state[i] = rsrp[i-len(self.bs_list)]
+                state[i] = (rsrp[i-len(self.bs_list)] + 140)/140
 
         state[len(self.bs_list)*2] = util.find_ue_by_id(ue_id).actual_data_rate 
         state[len(self.bs_list)*2 + 1] = util.find_ue_by_id(ue_id).service_class
 
-        print([state[0:len(self.bs_list)], state[len(self.bs_list):len(self.bs_list)*2], state[len(self.bs_list*2)]])
+        print([state[0:len(self.bs_list)], state[len(self.bs_list):len(self.bs_list)*2], state[len(self.bs_list*2)], state[len(self.bs_list)*2 + 1]])
 
         state = np.array(state)
-        state = np.reshape(state, (-1, len(self.bs_list)*2+1))
+        state = np.reshape(state, (-1, len(self.bs_list)*2+2))
 
         action = self.dqn_engine.act(state, rsrp)  
         print("ACTION SELECTED BY DQN: %s" %(action))
@@ -143,29 +155,55 @@ class wireless_environment:
         bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
         reward = self.compute_reward(state, action, bitrate, data_rate, rsrp, ue_id)
         print("REWARD RECEIVED BY DQN: %s" %(reward))
-        new_state = state.copy()
-        new_state[0][action] = util.find_bs_by_id(action).new_state()
-        new_state[0][len(self.bs_list)] = bitrate
 
-        self.dqn_engine.remember(state.copy(), action, reward, new_state.copy(), False)
-        self.dqn_engine.replay()
+        if self.training:
+            # new state is composed by updated base station occupation level, by following UE's rsrps, by following UE's actual bitrate and by following UE's service class 
+            new_state = state.copy()
+            t, a = util.find_bs_by_id(action).get_state()
+            new_state[0][action] = a/t
+
+            next_ue = util.find_ue_by_id(self.next_ue)
+            next_ue_rsrp = self.discover_bs(next_ue.ue_id)
+            for i in range (len(self.bs_list), len(self.bs_list)*2):
+                if i - len(self.bs_list) in next_ue_rsrp:
+                    new_state[0][i] = (next_ue_rsrp[i - len(self.bs_list)] + 140)/140
+            if next_ue.current_bs in next_ue_rsrp:
+                new_state[0][len(self.bs_list)*2] = util.find_bs_by_id(next_ue.current_bs).update_connection(next_ue.ue_id, next_ue.requested_bitrate, next_ue_rsrp)
+            else:
+                #both in case the current base station is no more visibile and in the case
+                #no base station is visible to next_ue, then the next bitrate will be 0 for this moment
+                new_state[0][len(self.bs_list)*2] = 0
+
+            new_state[0][len(self.bs_list)*2 + 1] = next_ue.service_class
+            #print("ID %s, new_state = %s" %(self.next_ue, new_state[0]))
+
+            self.dqn_engine.remember(state.copy(), action, reward, new_state.copy(), False)
+            self.dqn_engine.replay()
+            self.dqn_engine.target_train()
+
+
 
         return action, bitrate
 
     def compute_reward(self, state, action, bitrate, desired_data_rate, rsrp, ue_id):
         if action in rsrp:
             allocated, total = util.find_bs_by_id(action).get_connection_info(ue_id)
+            alpha = 0
+            if util.find_ue_by_id(ue_id).service_class == 0:
+                alpha = 3
+            else:
+                alpha = 1
             if bitrate > desired_data_rate:
                 # in case the DQN made a correct allocation I do not want the user occupies too much resources, so if the allocated resources
                 # for the users are too much I will discount the reward of a proportional value
-                return desired_data_rate/(allocated/total)
+                return alpha * desired_data_rate / (allocated/total)
             else:
                 if allocated > 0:
                     # in case of a bad allocation, I do not want again that the user occupies too much resources (better if it is allocated to
                     # one of its neighbor base stations)
-                    return desired_data_rate * (bitrate - desired_data_rate) * (allocated/total)
+                    return alpha * (desired_data_rate**2) * (bitrate - desired_data_rate) #* (allocated/total) * 100
                 else:
-                    return (desired_data_rate**2) * (bitrate - desired_data_rate)
+                    return alpha * (desired_data_rate**2) * (bitrate - desired_data_rate)
         else:
             # it should never go here (there are checks on actions in the argmax)
             return -10000
@@ -183,6 +221,12 @@ class wireless_environment:
             ue.next_timestep()
         for bs in self.bs_list:
             bs.next_timestep()
+
+    def reset(self):
+        for ue in self.ue_list:
+            ue.reset()
+        for bs in self.bs_list:
+            bs.reset()
        
 
 
