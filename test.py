@@ -58,6 +58,9 @@ env.setup_dqn()
 
 print(env.dqn_engine.model.summary())
 
+num = 0
+den = 0
+
 
 if PLOT:
     util.plot(ue, bs, env)
@@ -71,7 +74,8 @@ for j in range(0, len(ue)):
             env.next_ue = ue[j+1]
     else:
         env.next_ue = ue[j]
-    util.find_ue_by_id(ue[j]).connect_to_bs_random()
+    ue_j = util.find_ue_by_id(ue[j])
+    ue_j.connect_to_bs_random()
 
 if PLOT:
     util.plot(ue, bs, env)
@@ -79,8 +83,9 @@ if PLOT:
 #time.sleep(1)
 env.next_timestep()
 
+
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 5):
+for cycle in range (0, 100):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
     for j in range(0, len(ue)):
@@ -89,7 +94,18 @@ for cycle in range (0, 5):
             env.next_ue = ue[j+1]
         else:
             env.next_ue = ue[j]
-        util.find_ue_by_id(ue[j]).update_connection()
+        ue_j = util.find_ue_by_id(ue[j])
+        ue_j.update_connection()
+        
+        #update statistics
+        num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
+        if ue_j.service_class == 0:
+            num_j *= 3
+            den += 3
+        else:
+            den += 1
+        num += num_j
+
         print("\n\n")
 
     if PLOT:
@@ -98,7 +114,7 @@ for cycle in range (0, 5):
     #time.sleep(1)
     env.next_timestep()
 
-
+print(num/den)
 
 
 time.sleep(1)

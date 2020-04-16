@@ -63,10 +63,11 @@ if PLOT:
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 100):
+for cycle in range (0, 1000):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     if random.random() < 0.05:
         env.reset()
+        print("ENVIRONMENT RESETTED TO INITIAL STATE")
     random.shuffle(ue)
     for j in range(0, len(ue)):
         print("\n\n")
