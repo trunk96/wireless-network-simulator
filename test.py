@@ -4,18 +4,36 @@ import Satellite
 import numpy as np
 import random
 import time
-
+import os
 
 PLOT = True
-
+N_UE = 100
 
 env = environment.wireless_environment(1000)
 ue = []
 bs = []
-for i in range(0, 50):
-    id = env.insert_ue(10, speed = 10, direction = random.randint(0, 359))
-    ue.append(id)
 
+num = 0
+den = 0
+
+if not os.path.exists("scenario.npy"):
+    #generate a scenario
+    ue_directions = np.random.randint(0, high = 360, size = N_UE)
+    ue_positions = []
+    for i in range(0, N_UE):
+        ue_positions.append((np.random.randint(0, high = env.x_limit+1), np.random.randint(0, high = env.y_limit+1), 1))
+    np.save("scenario.npy", [ue_directions, ue_positions], allow_pickle=True)
+
+
+scenario = np.load("scenario.npy", allow_pickle=True)   
+
+for i in range(0, N_UE):
+    if i < 50:
+        id = env.insert_ue(0, starting_position=scenario[1][i], speed = 10, direction = scenario[0][i])
+    else:
+        id = env.insert_ue(1, starting_position=scenario[1][i], speed = 10, direction = scenario[0][i])
+
+    ue.append(id)
 #sat_id = env.place_SAT_base_station((1,1,1))
 #sat = util.find_bs_by_id(sat_id)
 nr_bs = env.place_NR_base_station((200, 200, 40), 800, 2, 20, 16, 3, 100)
@@ -53,12 +71,22 @@ if PLOT:
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 1000):
+for cycle in range (0, 100):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
-    for j in ue:
+    for j in range(0, len(ue)):
         print("\n\n")
-        util.find_ue_by_id(j).update_connection()
+        ue_j = util.find_ue_by_id(ue[j])
+        ue_j.update_connection()
+        num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
+        if ue_j.service_class == 0:
+            num_j *= 3
+            den += 3
+        else:
+            den += 1
+        num += num_j
+
+
         print("\n\n")
 
     if PLOT:
@@ -67,7 +95,7 @@ for cycle in range (0, 1000):
     #time.sleep(1)
     env.next_timestep()
 
-
+print(num/den)
 
 #util.find_ue_by_id(id).update_connection()
 #print(sat.ue_allocation)
