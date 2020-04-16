@@ -8,7 +8,7 @@ import random
 import time
 
 
-PLOT = False
+PLOT = True
 N_UE = 100
 
 env = environment.wireless_environment(True, 1000)
@@ -43,6 +43,7 @@ sat = env.place_SAT_base_station((500, 500, 35800000))
 bs.append(sat)
 env.setup_dqn()
 
+
 if PLOT:
     util.plot(ue, bs, env)
     plt.pause(0.1)
@@ -67,7 +68,6 @@ for cycle in range (0, 1000):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     if random.random() < 0.05:
         env.reset()
-        print("ENVIRONMENT RESETTED TO INITIAL STATE")
     random.shuffle(ue)
     for j in range(0, len(ue)):
         print("\n\n")

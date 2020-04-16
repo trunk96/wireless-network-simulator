@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import math
 import random
 import numpy as np
+import time
 
 
 
@@ -223,10 +224,19 @@ class wireless_environment:
             bs.next_timestep()
 
     def reset(self):
-        for ue in self.ue_list:
-            ue.reset()
-        for bs in self.bs_list:
+        res = random.random()
+        if res < 0.5:
+            for ue in self.ue_list:
+                ue.reset()
+            for bs in self.bs_list:
+                bs.reset()
+        else:
+            res = random.randint(0, len(self.bs_list)-1)
+            bs = util.find_bs_by_id(res)
+            ue_list = bs.get_connected_users()
+            for ue_id in ue_list:
+                util.find_ue_by_id(ue_id).disconnect_from_bs()
             bs.reset()
-       
+            time.sleep(30)
 
 
