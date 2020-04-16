@@ -14,8 +14,8 @@ class Satellite:
     -High Throughput Satellites - Delivering future capacity needs, ADL)
     """
     bs_type = "sat"
-    bs_id= None
-    position = None  # tuple, (x,y) in meters
+    #bs_id= None
+    #position = None  # tuple, (x,y) in meters
     #h = None  # height [m]
     carrier_bnd = 220  # carrier bandwidth [MHz]
     carrier_frequency = 28.4  # frequency [GHz]
@@ -26,25 +26,12 @@ class Satellite:
     #boltzmann_const = 10*math.log10(constants.Boltzmann)  # Boltzmann Constant [dBW/K/Hz]
     #dw_path_CN0 = 93.8  # Down-path C/N_0 (carrier power to noise power spectral density) [dBHz]
     #adj_channel_int = 0.2  # adjacent channel interference [dB]
-    env = None
+    #env = None
     #rsrp = subcarrier_pow + antenna_gain - path_loss - atm_loss - adj_channel_int  # Reference Signals Received Power (for LTE)
     #rsrp = None
     #rbur = None  # resource block utilization ration
 
 
-    frame_length = 120832  # [120832 symbols]
-    rb_length = 288  # reference burst length, fixed [symbols]
-    tb_header = 280  # traffic burst header, fixed [symbols]
-    guard_space = 64  # fixed [symbols]
-    total_users = 0
-    frame_duration = 2 # lenght of the frame in milliseconds
-    total_symbols = (frame_length - 288*2 - 64*2)/3 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
-    frame_utilization = 0  # allocated resources
-    ue_allocation = {}
-
-    T = 10
-    resource_utilization_array = [0] * T
-    resource_utilization_counter = 0
 
     # tb_length = tb_header + n * 64 [symbols]
 
@@ -53,6 +40,19 @@ class Satellite:
         self.position = (position[0], position[1])
         self.env = env
         #self.h = position[2]
+        self.frame_length = 120832  # [120832 symbols]
+        self.rb_length = 288  # reference burst length, fixed [symbols]
+        self.tb_header = 280  # traffic burst header, fixed [symbols]
+        self.guard_space = 64  # fixed [symbols]
+        self.total_users = 0
+        self.frame_duration = 2 # lenght of the frame in milliseconds
+        self.total_symbols = (self.frame_length - 288*2 - 64*2)//3 # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
+        self.frame_utilization = 0  # allocated resources
+        self.ue_allocation = {}
+
+        self.T = 10
+        self.resource_utilization_array = [0] * self.T
+        self.resource_utilization_counter = 0
 
     
     def compute_nsymb_SAT(self, data_rate, rsrp):
@@ -165,7 +165,7 @@ class Satellite:
         
 
     def next_timestep(self):
-        print(self.frame_utilization)
+        #print(self.frame_utilization)
         self.resource_utilization_array[self.resource_utilization_counter] = self.frame_utilization
         self.resource_utilization_counter += 1
         if self.resource_utilization_counter % self.T == 0:
@@ -191,3 +191,10 @@ class Satellite:
     
     def get_connection_info(self, ue_id):
         return self.ue_allocation[ue_id]-self.tb_header-self.guard_space, self.total_symbols
+
+    def get_connected_users(self):
+        return list(self.ue_allocation.keys())
+
+    def reset(self):
+        self.resource_utilization_array = [0] * self.T
+        self.resource_utilization_counter = 0

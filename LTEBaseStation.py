@@ -13,23 +13,6 @@ LTEbandwidth_prb_lookup = {
 
 class LTEBaseStation:
     bs_type = "lte"
-    prb_bandwidth_size = 0
-    total_prb = 0
-    allocated_prb = 0
-    ue_pb_allocation = {}
-    antenna_gain = 0
-    feeder_loss = 0
-    antenna_power = 0
-    bs_id = 0
-    carrier_frequency = 0 #in MHz 
-    position = None
-    h_b = 40 #height of BS antenna
-    number_subcarriers = 0
-    env = None
-
-    T = 10
-    resource_utilization_array = [0] * T
-    resource_utilization_counter = 0
 
     def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, env):
         if position[2] > 200 or position[2] < 30:
@@ -40,6 +23,7 @@ class LTEBaseStation:
         
         self.prb_bandwidth_size = prb_bandwidth_size
         self.total_prb = total_prb
+        self.allocated_prb = 0
         self.antenna_power = antenna_power
         self.antenna_gain = antenna_gain
         self.feeder_loss = feeder_loss
@@ -49,6 +33,10 @@ class LTEBaseStation:
         self.h_b = position[2]
         self.number_subcarriers = number_subcarriers
         self.env = env
+        self.ue_pb_allocation = {}
+        self.T = 10
+        self.resource_utilization_array = [0] * self.T
+        self.resource_utilization_counter = 0
 
     def compute_rbur(self):
         return sum(self.resource_utilization_array)/(self.T*self.total_prb)
@@ -127,7 +115,13 @@ class LTEBaseStation:
     
     def get_connection_info(self, ue_id):
         return self.ue_pb_allocation[ue_id], self.total_prb
+    
+    def get_connected_users(self):
+        return list(self.ue_pb_allocation.keys())
 
+    def reset(self):
+        self.resource_utilization_array = [0] * self.T
+        self.resource_utilization_counter = 0
         
     
 
