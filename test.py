@@ -75,7 +75,17 @@ for j in range(0, len(ue)):
     else:
         env.next_ue = ue[j]
     ue_j = util.find_ue_by_id(ue[j])
-    ue_j.connect_to_bs_random()
+    ue_j.connect_to_bs()
+    
+    #update statistics
+    num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
+    if ue_j.service_class == 0:
+        num_j *= 3
+        den += 3
+    else:
+        den += 1
+    num += num_j
+    
 
 if PLOT:
     util.plot(ue, bs, env)

@@ -165,7 +165,7 @@ class Satellite:
         
 
     def next_timestep(self):
-        print(self.frame_utilization)
+        #print(self.frame_utilization)
         self.resource_utilization_array[self.resource_utilization_counter] = self.frame_utilization
         self.resource_utilization_counter += 1
         if self.resource_utilization_counter % self.T == 0:

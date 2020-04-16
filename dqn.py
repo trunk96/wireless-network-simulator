@@ -7,7 +7,7 @@ import numpy as np
 
 class DQN:
 
-    def __init__(self, env, memory_len = 2000, gamma = 0.95, epsilon = 1.0, epsilon_min = 0.01, epsilon_decay = 0.995, learning_rate = 0.001, tau = 1):
+    def __init__(self, env, memory_len = 2000, gamma = 0.95, epsilon = 1.0, epsilon_min = 0.01, epsilon_decay = 0.995, learning_rate = 0.01, tau = 0.05):
         self.env = env
         self.memory = deque(maxlen=memory_len)
         self.gamma = gamma
@@ -32,9 +32,9 @@ class DQN:
     def create_model(self):
         model = K.models.Sequential()
         #model.add(K.layers.Dense(24, input_dim = self.input_count, activation = "relu"))
-        model.add(K.layers.Dense(24, input_dim = self.input_count))
+        model.add(K.layers.Dense(48, input_dim = self.input_count))
+        model.add(K.layers.Dense(96, activation = "relu"))
         model.add(K.layers.Dense(48, activation = "relu"))
-        model.add(K.layers.Dense(24, activation = "relu"))
         model.add(K.layers.Dense(self.output_count))
         model.compile(loss = "mean_squared_error", optimizer = K.optimizers.Adam(lr=self.learning_rate))
         return model
