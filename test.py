@@ -9,7 +9,7 @@ import os
 PLOT = True
 N_UE = 100
 
-env = environment.wireless_environment(1000)
+env = environment.wireless_environment(10000)
 ue = []
 bs = []
 
@@ -36,22 +36,22 @@ for i in range(0, N_UE):
     ue.append(id)
 #sat_id = env.place_SAT_base_station((1,1,1))
 #sat = util.find_bs_by_id(sat_id)
-nr_bs = env.place_NR_base_station((200, 200, 40), 800, 2, 20, 16, 3, 100)
+nr_bs = env.place_NR_base_station((2000, 2000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs)
 
-nr_bs1 = env.place_NR_base_station((800, 200, 40), 800, 2, 20, 16, 3, 100)
+nr_bs1 = env.place_NR_base_station((8000, 2000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs1)
 
-nr_bs2 = env.place_NR_base_station((500, 800, 40), 800, 2, 20, 16, 3, 100)
+nr_bs2 = env.place_NR_base_station((5000, 8000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs2)
 
-lte_bs = env.place_LTE_base_station((50, 500, 40), 700, 20, 16, 3, 20)
+lte_bs = env.place_LTE_base_station((500, 5000, 40), 700, 20, 16, 3, 20)
 bs.append(lte_bs)
 
-lte_bs1 = env.place_LTE_base_station((900, 900, 40), 700, 20, 16, 3, 20)
+lte_bs1 = env.place_LTE_base_station((9000, 9000, 40), 700, 20, 16, 3, 20)
 bs.append(lte_bs1)
 
-sat = env.place_SAT_base_station((500, 500, 35800000))
+sat = env.place_SAT_base_station((5000, 5000, 35800000))
 bs.append(sat)
 
 
@@ -71,7 +71,7 @@ if PLOT:
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 100):
+for cycle in range (0, 10):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
     for j in range(0, len(ue)):
