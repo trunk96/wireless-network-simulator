@@ -32,6 +32,7 @@ class wireless_environment:
             self.y_limit = n
         self.x_limit = n
         self.training = training
+        self.cumulative_reward = 0
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
         if starting_position is not None and (starting_position[2] > 10 or starting_position[2] < 1):
@@ -156,6 +157,7 @@ class wireless_environment:
         bitrate = util.find_bs_by_id(action).request_connection(ue_id, data_rate, rsrp)
         reward = self.compute_reward(state, action, bitrate, data_rate, rsrp, ue_id)
         print("REWARD RECEIVED BY DQN: %s" %(reward))
+        self.cumulative_reward += reward
 
         if self.training:
             # new state is composed by updated base station occupation level, by following UE's rsrps, by following UE's actual bitrate and by following UE's service class 

@@ -125,6 +125,7 @@ for cycle in range (0, 10):
     env.next_timestep()
 
 print(num/den)
+print(env.cumulative_reward)
 
 
 time.sleep(1)
