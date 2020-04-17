@@ -225,7 +225,7 @@ class wireless_environment:
 
     def reset(self):
         res = random.random()
-        if res < 0.5:
+        if res < 1:
             for ue in self.ue_list:
                 ue.reset()
             for bs in self.bs_list:
@@ -237,6 +237,5 @@ class wireless_environment:
             for ue_id in ue_list:
                 util.find_ue_by_id(ue_id).disconnect_from_bs()
             bs.reset()
-            time.sleep(30)
 
 

@@ -81,9 +81,14 @@ class DQN:
 
         #this to avoid that the choosen AP is not visible by the user
         actual_prediction = []
+        min_prediction = min(prediction)-1
         for i in range(0, len(prediction)):
             if i in rsrp:
                 actual_prediction.append(prediction[i])
+            else:
+                actual_prediction.append(min_prediction)
+        #print("RSRP: %s" %rsrp)
+        #print("PREDICTION_ACTUAL: %s" %actual_prediction)
         return np.argmax(actual_prediction)
 
     def save_model(self, path):
