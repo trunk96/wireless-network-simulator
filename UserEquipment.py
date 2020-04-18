@@ -12,13 +12,8 @@ ue_class = {
 }
 
 class user_equipment:
-    requested_bitrate = 0
-    ue_id = None
-    current_position = None
-    h_m = 1 #height of UE antenna
-    env = None
-    current_bs = None
-    actual_data_rate = 0
+
+
     MATLAB = 0
     RANDOM = 0
     epsilon = 0.05
@@ -34,6 +29,8 @@ class user_equipment:
         self.direction = direction #in degrees from the x axis (0 horizontal movement, 90 vertical movement)
         self.old_position = (starting_position[0], starting_position[1])
         self.service_class = service_class
+        self.current_bs = None
+        self.actual_data_rate
 
     
     def move(self):

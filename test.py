@@ -96,6 +96,7 @@ for cycle in range (0, 10):
     env.next_timestep()
 
 print(num/den)
+print(env.cumulative_reward)
 
 #util.find_ue_by_id(id).update_connection()
 #print(sat.ue_allocation)

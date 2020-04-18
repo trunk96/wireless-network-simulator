@@ -21,6 +21,7 @@ class wireless_environment:
         else:
             self.y_limit = n
         self.x_limit = n
+        self.cumulative_reward = 0
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
         if starting_position is not None and (starting_position[2] > 10 or starting_position[2] < 1):
@@ -127,7 +128,30 @@ class wireless_environment:
                 least_loaded = elem
         
         data_rate = util.find_bs_by_id(least_loaded).request_connection(ue_id, requested_bitrate, available_bs)
+        reward = self.compute_reward(None, least_loaded, data_rate, requested_bitrate, available_bs, ue_id)
+        self.cumulative_reward += reward
         return least_loaded, data_rate
        
 
-
+    def compute_reward(self, state, action, bitrate, desired_data_rate, rsrp, ue_id):
+        if action in rsrp:
+            allocated, total = util.find_bs_by_id(action).get_connection_info(ue_id)
+            alpha = 0
+            if util.find_ue_by_id(ue_id).service_class == 0:
+                alpha = 3
+            else:
+                alpha = 1
+            if bitrate > desired_data_rate:
+                # in case the DQN made a correct allocation I do not want the user occupies too much resources, so if the allocated resources
+                # for the users are too much I will discount the reward of a proportional value
+                return alpha * desired_data_rate / (allocated/total)
+            else:
+                if allocated > 0:
+                    # in case of a bad allocation, I do not want again that the user occupies too much resources (better if it is allocated to
+                    # one of its neighbor base stations)
+                    return alpha * (desired_data_rate**2) * (bitrate - desired_data_rate) #* (allocated/total) * 100
+                else:
+                    return alpha * (desired_data_rate**2) * (bitrate - desired_data_rate)
+        else:
+            # it should never go here (there are checks on actions in the argmax)
+            return -10000
