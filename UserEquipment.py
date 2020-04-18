@@ -7,15 +7,20 @@ MAX_STEP = 2000
 
 # service classes for UEs, "class: Mbps"
 ue_class = {
-    0: 10,
-    1: 3
+    0: 50,
+    1: 15
+}
+
+ue_class_lambda = {
+    0: 0.3,
+    1: 0.5
 }
 
 class user_equipment:
 
     MATLAB = 0
     RANDOM = 0
-    epsilon = 0.05
+    epsilon = -1
 
     def __init__ (self, requested_bitrate, service_class, ue_id, starting_position, env, speed, direction):
         self.ue_id = ue_id
@@ -28,8 +33,11 @@ class user_equipment:
         self.direction = direction #in degrees from the x axis (0 horizontal movement, 90 vertical movement)
         self.old_position = (starting_position[0], starting_position[1])
         self.service_class = service_class
+        self.lambda_exp = ue_class_lambda[self.service_class]
         self.current_bs = None
         self.actual_data_rate = 0
+        self.last_action_t = 0
+        
 
     
     def move(self):
@@ -106,6 +114,31 @@ class user_equipment:
         self.direction = self.direction % 360
         self.current_position = (new_x, new_y)
         return self.current_position
+
+    def do_action(self, t):
+        if self.current_bs == None:
+            self.connect_to_bs()
+            return
+        # compute the time spent in the service class
+        delta_t = t - self.last_action_t
+        # compute probability of change action
+        prob = self.lambda_exp * math.exp(-self.lambda_exp * delta_t)
+        print("PROB: %s" %prob)
+        if random.random() > prob:
+            # time to change service class
+            self.disconnect_from_bs()
+            if self.service_class == 0:
+                self.service_class = 1
+            else:
+                self.service_class = 0
+            self.requested_bitrate = ue_class[self.service_class]
+            self.lambda_exp = ue_class_lambda[self.service_class]
+            self.last_action_t = t
+            print("CHANGED SERVICE CLASS: User ID %s has now changed to class %s" %(self.ue_id, self.service_class))
+            self.connect_to_bs()
+        else:
+            self.update_connection()
+
 
     def connect_to_bs_random(self):
         available_bs = self.env.discover_bs(self.ue_id)

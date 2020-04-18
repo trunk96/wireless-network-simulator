@@ -123,6 +123,7 @@ class wireless_environment:
         for elem in available_bs:
             t, a = util.find_bs_by_id(elem).get_state()
             bs_load = a/t
+            print(bs_load)
             if  bs_load < load:
                 load = bs_load
                 least_loaded = elem
