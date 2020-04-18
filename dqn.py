@@ -43,6 +43,7 @@ class DQN:
         self.memory.append([state, action, reward, new_state, done])
 
     def replay(self):
+        prng = random.getstate()
         batch_size = 32
         if len(self.memory) < batch_size: 
             return
@@ -56,6 +57,7 @@ class DQN:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
             self.model.fit(state, target, epochs=1, verbose=0)
+        random.setstate(prng)
         '''
         if self.target_train_counter == self.target_train_steps:
             self.target_train()
@@ -75,7 +77,10 @@ class DQN:
         self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
         if np.random.random() < self.epsilon:
-            return random.choice(list(rsrp))
+            prng = random.getstate()
+            a = random.choice(list(rsrp))
+            random.setstate(prng)
+            return a
         print("ACTION VECTOR FROM DQN %s" %self.model.predict(state)[0])
         prediction = self.model.predict(state)[0]
 

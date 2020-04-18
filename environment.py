@@ -225,19 +225,10 @@ class wireless_environment:
         for bs in self.bs_list:
             bs.next_timestep()
 
-    def reset(self):
-        res = random.random()
-        if res < 1:
-            for ue in self.ue_list:
-                ue.reset()
-            for bs in self.bs_list:
-                bs.reset()
-        else:
-            res = random.randint(0, len(self.bs_list)-1)
-            bs = util.find_bs_by_id(res)
-            ue_list = bs.get_connected_users()
-            for ue_id in ue_list:
-                util.find_ue_by_id(ue_id).disconnect_from_bs()
+    def reset(self, cycle):
+        for ue in self.ue_list:
+            ue.reset(cycle)
+        for bs in self.bs_list:
             bs.reset()
-
+        
 

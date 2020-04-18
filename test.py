@@ -12,6 +12,8 @@ import os
 PLOT = True
 N_UE = 100
 
+random.seed(1)
+
 env = environment.wireless_environment(False, 10000)
 ue = []
 bs = []
@@ -67,7 +69,7 @@ if PLOT:
     plt.pause(0.1)
 #time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
-random.seed(1)
+'''
 random.shuffle(ue)
 for j in range(0, len(ue)):
     if j <= len(ue) - 2:
@@ -76,7 +78,7 @@ for j in range(0, len(ue)):
         env.next_ue = ue[j]
     ue_j = util.find_ue_by_id(ue[j])
     ue_j.connect_to_bs_random()
-    '''
+
     #update statistics
     num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
     if ue_j.service_class == 0:
@@ -85,7 +87,7 @@ for j in range(0, len(ue)):
     else:
         den += 1
     num += num_j
-    '''
+'''
 
 if PLOT:
     util.plot(ue, bs, env)
@@ -105,7 +107,7 @@ for cycle in range (0, 10):
         else:
             env.next_ue = ue[j]
         ue_j = util.find_ue_by_id(ue[j])
-        ue_j.update_connection()
+        ue_j.do_action(cycle)
         
         #update statistics
         num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
