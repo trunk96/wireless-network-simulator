@@ -6,6 +6,7 @@ import random
 import time
 import os
 
+random.seed(1)
 PLOT = True
 N_UE = 100
 
