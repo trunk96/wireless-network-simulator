@@ -13,7 +13,6 @@ ue_class = {
 
 class user_equipment:
 
-
     MATLAB = 0
     RANDOM = 0
     epsilon = 0.05
@@ -30,7 +29,7 @@ class user_equipment:
         self.old_position = (starting_position[0], starting_position[1])
         self.service_class = service_class
         self.current_bs = None
-        self.actual_data_rate
+        self.actual_data_rate = 0
 
     
     def move(self):
