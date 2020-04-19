@@ -12,7 +12,7 @@ N_UE = 100
 
 random.seed(1)
 
-env = environment.wireless_environment(10000/2)
+env = environment.wireless_environment(10000/4)
 ue = []
 bs = []
 
