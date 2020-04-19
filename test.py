@@ -2,12 +2,15 @@ import environment
 import util
 import Satellite
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import time
 import os
 
 PLOT = True
 N_UE = 100
+
+random.seed(1)
 
 env = environment.wireless_environment(10000)
 ue = []
@@ -57,18 +60,21 @@ bs.append(sat)
 
 if PLOT:
     util.plot(ue, bs, env)
-    #plt.pause(0.1)
+    plt.pause(0.1)
 #time.sleep(1)
 #print(util.compute_rsrp(util.find_ue_by_id(id), sat, env))
+'''
 random.shuffle(ue)
 for j in ue:
     util.find_ue_by_id(j).connect_to_bs()
+
 
 if PLOT:
     util.plot(ue, bs, env)
     #plt.pause(0.1)
 #time.sleep(1)
 env.next_timestep()
+'''
 
 #util.find_ue_by_id(0).disconnect_from_bs()
 for cycle in range (0, 10):
@@ -77,7 +83,7 @@ for cycle in range (0, 10):
     for j in range(0, len(ue)):
         print("\n\n")
         ue_j = util.find_ue_by_id(ue[j])
-        ue_j.update_connection()
+        ue_j.do_action(cycle)
         num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
         if ue_j.service_class == 0:
             num_j *= 3
@@ -91,7 +97,7 @@ for cycle in range (0, 10):
 
     if PLOT:
         util.plot(ue, bs, env)
-        #plt.pause(0.1)
+        plt.pause(0.1)
     #time.sleep(1)
     env.next_timestep()
 
