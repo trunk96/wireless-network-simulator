@@ -12,7 +12,7 @@ N_UE = 100
 
 random.seed(1)
 
-env = environment.wireless_environment(10000/4)
+env = environment.wireless_environment(10000/2)
 ue = []
 bs = []
 
@@ -90,6 +90,7 @@ for cycle in range (0, 50):
             den += 3
         else:
             den += 1
+            #num_j = 0
         num += num_j
 
 
