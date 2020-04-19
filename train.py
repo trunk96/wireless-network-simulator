@@ -67,7 +67,7 @@ if PLOT:
 env.next_timestep()
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 1):
+for cycle in range (0, 1000):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     if cycle % 50 == 0:
         env.reset(cycle)
@@ -87,7 +87,7 @@ for cycle in range (0, 1):
     #time.sleep(1)
     env.next_timestep()
 
-#env.dqn_engine.save_model("D:\\Users\\Emanuele-PC\\Desktop\\model.h5")
+env.dqn_engine.save_model("D:\\Users\\Emanuele-PC\\Desktop\\model.h5")
 #env.next_timestep()
 
 
