@@ -7,8 +7,8 @@ MAX_STEP = 2000
 
 # service classes for UEs, "class: Mbps"
 ue_class = {
-    0: 10,
-    1: 3
+    0: 50,
+    1: 15
 }
 
 ue_class_lambda = {
