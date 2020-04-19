@@ -74,7 +74,7 @@ env.next_timestep()
 '''
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 10):
+for cycle in range (0, 30):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
     for j in range(0, len(ue)):
