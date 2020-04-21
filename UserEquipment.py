@@ -136,7 +136,9 @@ class user_equipment:
             self.last_action_t = t
             self.connect_to_bs()
         else:
-            self.update_connection()
+            self.disconnect_from_bs()
+            self.connect_to_bs()
+            #self.update_connection()
 
     def connect_to_bs_random(self):
         available_bs = self.env.discover_bs(self.ue_id)

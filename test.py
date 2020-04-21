@@ -10,7 +10,7 @@ import os
 PLOT = True
 N_UE = 50
 
-random.seed(1)
+random.seed(2)
 
 env = environment.wireless_environment(10000//3)
 ue = []
@@ -41,10 +41,16 @@ for i in range(0, N_UE):
 nr_bs = env.place_NR_base_station((2000, 2000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs)
 
-drone_bs1 = env.place_NR_base_station((5000, 5000, 200), 800, 2, 10, 8, 3, 20)
+nr_bs2 = env.place_NR_base_station((2000, 3000, 40), 800, 2, 20, 16, 3, 100)
+bs.append(nr_bs2)
+
+nr_bs3 = env.place_NR_base_station((3000, 2000, 40), 800, 2, 20, 16, 3, 100)
+bs.append(nr_bs3)
+
+drone_bs1 = env.place_DRONE_base_station((5000, 5000, 200), nr_bs2, 800, 70, 16, 3)
 bs.append(drone_bs1)
 
-drone_bs2 = env.place_NR_base_station((5000, 5000, 200), 800, 2, 10, 8, 3, 20)
+drone_bs2 = env.place_DRONE_base_station((5000, 5000, 200), nr_bs3, 800, 70, 16, 3)
 bs.append(drone_bs2)
 '''
 nr_bs1 = env.place_NR_base_station((8000, 2000, 40), 800, 2, 20, 16, 3, 100)
@@ -98,13 +104,13 @@ for cycle in range (0, 100):
             #num_j = 0
         num += num_j
         print("\n\n")
-    util.find_bs_by_id(bs[1]).move((1000, 1500), 200)
-    util.find_bs_by_id(bs[2]).move((2000, 1000), 200)
+    util.find_bs_by_id(bs[3]).move((1000, 1500), 200)
+    util.find_bs_by_id(bs[4]).move((2000, 1000), 200)
 
     if PLOT:
         util.plot(ue, bs, env)
         plt.pause(0.1)
-    #time.sleep(1)
+    time.sleep(1)
     env.next_timestep()
 
 print(num/den)

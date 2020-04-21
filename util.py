@@ -16,6 +16,8 @@ MIN_RSRP = -140 #dB
 def compute_rsrp(ue, bs, env):
     if bs.bs_type == "sat":
         return bs.sat_eirp - bs.path_loss - bs.atm_loss - bs.ut_G_T
+    elif bs.bs_type == "drone":
+        return bs.compute_rsrp_drone(ue)
     else:
         #lte and nr case
         path_loss = compute_path_loss_cost_hata(ue, bs, env)
@@ -91,6 +93,7 @@ def plot(ue, bs, env):
 
     ax.set_xlim(0, env.x_limit*3)
     ax.set_ylim(0, env.y_limit*3)
+
     colors = cm.rainbow(np.linspace(0, 1, len(bs)))
 
     for j in bs:
@@ -113,7 +116,10 @@ def plot(ue, bs, env):
         ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
 
     for j in range(0, len(bs)):
-        ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
+        if find_bs_by_id(j).bs_type == "drone":
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400, edgecolor = colors[find_bs_by_id(j).linked_bs])
+        else:
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
     
     for j in range(0, len(bs)):
         ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))

@@ -2,6 +2,7 @@ import UserEquipment as ue
 import LTEBaseStation as LTEbs
 import NRBaseStation as NRbs
 import Satellite as SATbs
+import Drone as DRONEbs
 import util
 from concurrent.futures import ThreadPoolExecutor
 import math
@@ -91,6 +92,10 @@ class wireless_environment:
         self.bs_list.append(new_bs)
         return new_bs.bs_id
 
+    def place_DRONE_base_station(self, starting_position, linked_bs_id, carrier_frequency, amplification_factor, antenna_gain, feeder_loss):
+        new_bs = DRONEbs.DroneRelay(len(self.bs_list), linked_bs_id, amplification_factor, antenna_gain, feeder_loss, carrier_frequency, starting_position, self)
+        self.bs_list.append(new_bs)
+        return new_bs.bs_id
     
     #this method shall be called by an UE 
     #that wants to have a measure of the RSRP 
@@ -105,8 +110,9 @@ class wireless_environment:
                 thread_pool.append(thread)
             for i in range(0, len(self.bs_list)):
                 res = thread_pool[i].result() 
-                if (res > util.MIN_RSRP):
+                if res > -1000000:#if (res > util.MIN_RSRP):
                     rsrp[i] = res
+       print(rsrp)
        return rsrp
 
     def next_timestep(self):
