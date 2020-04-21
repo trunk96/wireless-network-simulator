@@ -8,17 +8,18 @@ import time
 import os
 
 PLOT = True
-N_UE = 100
+N_UE = 50
 
 random.seed(1)
 
-env = environment.wireless_environment(10000/2)
+env = environment.wireless_environment(10000//3)
 ue = []
 bs = []
 
 num = 0
 den = 0
 
+'''
 if not os.path.exists("scenario.npy"):
     #generate a scenario
     ue_directions = np.random.randint(0, high = 360, size = N_UE)
@@ -29,19 +30,23 @@ if not os.path.exists("scenario.npy"):
 
 
 scenario = np.load("scenario.npy", allow_pickle=True)   
+'''
 
 for i in range(0, N_UE):
-    if i < 50:
-        id = env.insert_ue(0, starting_position=scenario[1][i], speed = 10, direction = scenario[0][i])
-    else:
-        id = env.insert_ue(1, starting_position=scenario[1][i], speed = 10, direction = scenario[0][i])
-
+    id = env.insert_ue(0, starting_position=(random.randint(0, env.x_limit-1), random.randint(0, env.y_limit-1), 1), speed = 10, direction = random.randint(0, 359))
     ue.append(id)
+
 #sat_id = env.place_SAT_base_station((1,1,1))
 #sat = util.find_bs_by_id(sat_id)
 nr_bs = env.place_NR_base_station((2000, 2000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs)
 
+drone_bs1 = env.place_NR_base_station((5000, 5000, 200), 800, 2, 10, 8, 3, 20)
+bs.append(drone_bs1)
+
+drone_bs2 = env.place_NR_base_station((5000, 5000, 200), 800, 2, 10, 8, 3, 20)
+bs.append(drone_bs2)
+'''
 nr_bs1 = env.place_NR_base_station((8000, 2000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs1)
 
@@ -56,7 +61,7 @@ bs.append(lte_bs1)
 
 sat = env.place_SAT_base_station((5000, 5000, 35800000))
 bs.append(sat)
-
+'''
 
 if PLOT:
     util.plot(ue, bs, env)
@@ -77,7 +82,7 @@ env.next_timestep()
 '''
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 50):
+for cycle in range (0, 100):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
     for j in range(0, len(ue)):
@@ -92,9 +97,9 @@ for cycle in range (0, 50):
             den += 1
             #num_j = 0
         num += num_j
-
-
         print("\n\n")
+    util.find_bs_by_id(bs[1]).move((1000, 1500), 200)
+    util.find_bs_by_id(bs[2]).move((2000, 1000), 200)
 
     if PLOT:
         util.plot(ue, bs, env)

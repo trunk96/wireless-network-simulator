@@ -89,8 +89,8 @@ def plot(ue, bs, env):
 
     plt.cla()
 
-    ax.set_xlim(0, env.x_limit)
-    ax.set_ylim(0, env.y_limit)
+    ax.set_xlim(0, env.x_limit*3)
+    ax.set_ylim(0, env.y_limit*3)
     colors = cm.rainbow(np.linspace(0, 1, len(bs)))
 
     for j in bs:

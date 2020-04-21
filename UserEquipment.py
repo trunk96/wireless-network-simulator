@@ -7,7 +7,7 @@ MAX_STEP = 2000
 
 # service classes for UEs, "class: Mbps"
 ue_class = {
-    0: 50,
+    0: 30,
     1: 15
 }
 ue_class_lambda = {
@@ -119,7 +119,7 @@ class user_equipment:
             self.connect_to_bs()
             return
         # compute the time spent in the service class
-        delta_t = t - self.last_action_t
+        delta_t = 0# t - self.last_action_t
         # compute probability of change action
         prob = 1 - (1 - math.exp(-self.lambda_exp * delta_t))
         if random.random() > prob:
