@@ -91,8 +91,8 @@ def plot(ue, bs, env):
 
     plt.cla()
 
-    ax.set_xlim(0, env.x_limit*3)
-    ax.set_ylim(0, env.y_limit*3)
+    #ax.set_xlim(0, env.x_limit)
+    #ax.set_ylim(0, env.y_limit)
 
     colors = cm.rainbow(np.linspace(0, 1, len(bs)))
 
@@ -118,6 +118,8 @@ def plot(ue, bs, env):
     for j in range(0, len(bs)):
         if find_bs_by_id(j).bs_type == "drone_relay":
             ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400, edgecolor = colors[find_bs_by_id(j).linked_bs], linewidth = 3)
+        elif find_bs_by_id(j).bs_type == "drone_bs":
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400)
         else:
             ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
     

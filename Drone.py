@@ -86,19 +86,27 @@ class DroneRelay:
     def move(self, destination, speed):
         x_k = destination[0] - self.position[0]
         y_k = destination[1] - self.position[1]
+        z_k = destination[2] - self.h_b
         theta_k = self.theta_k
         v_k = 1*(x_k*math.cos(theta_k) + y_k*math.sin(theta_k))
+        v_z_k = 1*z_k
         if v_k > speed and v_k > 0:
             v_k = speed
         elif v_k < -speed and v_k < 0:
             v_k = -speed
+        if v_z_k > speed and v_z_k > 0:
+            v_z_k = speed
+        elif v_z_k < -speed and v_z_k < 0:
+            v_z_k = -speed
         w_k = 1*(math.atan2(-y_k,-x_k) - theta_k + math.pi)
 
 
         new_x = self.position[0]+v_k*math.cos(theta_k + (w_k / 2))
         new_y = self.position[1]+v_k*math.sin(theta_k + (w_k / 2))
+        new_z = self.h_b + v_z_k
         new_theta = self.theta_k + w_k
         self.position = (new_x, new_y)
+        self.h_b = new_z
         self.current_position = self.position
         self.theta_k = new_theta
 
@@ -198,6 +206,7 @@ class DroneBaseStation:
         self.theta_k = 0
 
 
+
     def compute_rbur(self):
         return sum(self.resource_utilization_array)/(self.T*self.total_prb)
 
@@ -290,19 +299,27 @@ class DroneBaseStation:
     def move(self, destination, speed):
         x_k = destination[0] - self.position[0]
         y_k = destination[1] - self.position[1]
+        z_k = destination[2] - self.h_b
         theta_k = self.theta_k
         v_k = 1*(x_k*math.cos(theta_k) + y_k*math.sin(theta_k))
+        v_z_k = 1*z_k
         if v_k > speed and v_k > 0:
             v_k = speed
         elif v_k < -speed and v_k < 0:
             v_k = -speed
+        if v_z_k > speed and v_z_k > 0:
+            v_z_k = speed
+        elif v_z_k < -speed and v_z_k < 0:
+            v_z_k = -speed
         w_k = 1*(math.atan2(-y_k,-x_k) - theta_k + math.pi)
 
 
         new_x = self.position[0]+v_k*math.cos(theta_k + (w_k / 2))
         new_y = self.position[1]+v_k*math.sin(theta_k + (w_k / 2))
+        new_z = self.h_b + v_z_k
         new_theta = self.theta_k + w_k
         self.position = (new_x, new_y)
+        self.h_b = new_z
         self.current_position = self.position
         self.theta_k = new_theta
 

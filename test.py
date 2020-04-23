@@ -7,17 +7,17 @@ import random
 import time
 import os
 
-PLOT = True
+PLOT = False
 N_UE = 50
 
 random.seed(2)
 
-env = environment.wireless_environment(10000//3)
+env = environment.wireless_environment(4000)
 ue = []
 bs = []
 
-num = 0
-den = 0
+num = []
+den = []
 
 '''
 if not os.path.exists("scenario.npy"):
@@ -38,20 +38,20 @@ for i in range(0, N_UE):
 
 #sat_id = env.place_SAT_base_station((1,1,1))
 #sat = util.find_bs_by_id(sat_id)
-nr_bs = env.place_NR_base_station((2000, 2000, 40), 800, 2, 20, 16, 3, 100)
-bs.append(nr_bs)
+sat_bs = env.place_SAT_base_station((2000, 2000))
+bs.append(sat_bs)
 
-nr_bs2 = env.place_NR_base_station((1000, 4000, 40), 800, 2, 20, 16, 3, 100)
+nr_bs2 = env.place_NR_base_station((5000, 1000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs2)
 
-nr_bs3 = env.place_NR_base_station((4000, 1000, 40), 800, 2, 20, 16, 3, 100)
-bs.append(nr_bs3)
+#nr_bs3 = env.place_NR_base_station((4000, 1000, 40), 800, 2, 20, 16, 3, 100)
+#bs.append(nr_bs3)
 
-drone_bs1 = env.place_DRONE_relay((5000, 5000, 200), nr_bs2, 800, 80, 16, 3)
+drone_bs1 = env.place_DRONE_relay((5000, 3000, 200), nr_bs2, 800, 80, 16, 3)
 bs.append(drone_bs1)
 
-#drone_bs2 = env.place_DRONE_base_station((5000, 5000, 200), nr_bs3, 800, 80, 16, 3)
-#bs.append(drone_bs2)
+drone_bs2 = env.place_DRONE_base_station((5000, 3000, 200), 800, 2, 10, 10, 1, 100)
+bs.append(drone_bs2)
 '''
 nr_bs1 = env.place_NR_base_station((8000, 2000, 40), 800, 2, 20, 16, 3, 100)
 bs.append(nr_bs1)
@@ -88,33 +88,34 @@ env.next_timestep()
 '''
 
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 100):
+for cycle in range (0, 250):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
+    num.append(0)
+    den.append(0)
     for j in range(0, len(ue)):
         print("\n\n")
         ue_j = util.find_ue_by_id(ue[j])
         ue_j.do_action(cycle)
-        num_j = ue_j.actual_data_rate/ue_j.requested_bitrate
-        if ue_j.service_class == 0:
-            num_j *= 3
-            den += 3
-        else:
-            den += 1
-            #num_j = 0
-        num += num_j
+        num[cycle] += ue_j.actual_data_rate
+        den[cycle] += 1
         print("\n\n")
-    util.find_bs_by_id(bs[3]).move((1000, 1500), 200)
-    util.find_bs_by_id(bs[4]).move((2000, 1000), 200)
+    util.find_bs_by_id(bs[2]).move((3500, 1000, 150), 20)
+    util.find_bs_by_id(bs[3]).move((1000, 2000, 150), 20)
 
     if PLOT:
         util.plot(ue, bs, env)
         plt.pause(0.1)
-    time.sleep(1)
     env.next_timestep()
 
-print(num/den)
-print(env.cumulative_reward)
+res = [x/y for x, y in zip(num, den)]
+print(res)
+
+fig, ax = plt.subplots()
+ax.plot(res)
+ax.set_title("Mean datarate")
+plt.show()
+
 
 #util.find_ue_by_id(id).update_connection()
 #print(sat.ue_allocation)
