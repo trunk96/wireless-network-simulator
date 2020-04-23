@@ -71,7 +71,7 @@ class wireless_environment:
         self.bs_list.append(new_bs)
         return new_bs.bs_id
     
-    def place_NR_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
+    def place_NR_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, drone = False):
         #check if the bandwith is in line with the specified numerology and specified carrier frequency
         fr = -1
         if (carrier_frequency <= 6000):  #below 6GHz
@@ -85,17 +85,23 @@ class wireless_environment:
             prb_size = 15*(2**numerology)*12 #15KHz*12subcarriers for numerology 0, 30KHz*12subcarriers for numerology 1, etc.
             #  NRbandwidth_prb_lookup defines the number of blocks of 180KHz available in the specified bandwidth with a certain numerology,
             #  so we have to multiply by the number of time slots (sub-frames in LTE terminology) in a time frame
-            new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            if drone == False:
+                new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            else:
+                new_bs = DRONEbs.DroneBaseStation(len(self.bs_list), DRONEbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
         else:
             raise Exception("The choosen bandwidth is not present in 5G NR standard with such numerology and frequency range")
 
         self.bs_list.append(new_bs)
         return new_bs.bs_id
 
-    def place_DRONE_base_station(self, starting_position, linked_bs_id, carrier_frequency, amplification_factor, antenna_gain, feeder_loss):
+    def place_DRONE_relay(self, starting_position, linked_bs_id, carrier_frequency, amplification_factor, antenna_gain, feeder_loss):
         new_bs = DRONEbs.DroneRelay(len(self.bs_list), linked_bs_id, amplification_factor, antenna_gain, feeder_loss, carrier_frequency, starting_position, self)
         self.bs_list.append(new_bs)
         return new_bs.bs_id
+
+    def place_DRONE_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
+        return self.place_NR_base_station(position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, drone = True)
     
     #this method shall be called by an UE 
     #that wants to have a measure of the RSRP 

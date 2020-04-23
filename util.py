@@ -16,7 +16,7 @@ MIN_RSRP = -140 #dB
 def compute_rsrp(ue, bs, env):
     if bs.bs_type == "sat":
         return bs.sat_eirp - bs.path_loss - bs.atm_loss - bs.ut_G_T
-    elif bs.bs_type == "drone":
+    elif bs.bs_type == "drone_relay":
         return bs.compute_rsrp_drone(ue)
     else:
         #lte and nr case
@@ -116,8 +116,8 @@ def plot(ue, bs, env):
         ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
 
     for j in range(0, len(bs)):
-        if find_bs_by_id(j).bs_type == "drone":
-            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400, edgecolor = colors[find_bs_by_id(j).linked_bs])
+        if find_bs_by_id(j).bs_type == "drone_relay":
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400, edgecolor = colors[find_bs_by_id(j).linked_bs], linewidth = 3)
         else:
             ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
     
