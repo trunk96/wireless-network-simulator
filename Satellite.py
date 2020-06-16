@@ -233,3 +233,6 @@ class Satellite:
     def reset(self):
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
+
+    def compute_latency(self):
+        return 0 #TODO

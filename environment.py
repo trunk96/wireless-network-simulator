@@ -16,13 +16,15 @@ class wireless_environment:
     y_limit = None
     env_type = util.EnvType.URBAN
 
-    def __init__(self, n, m = None):
+    def __init__(self, n, m = None, sampling_time = 1):
         if m is not None:
             self.y_limit = m
         else:
             self.y_limit = n
         self.x_limit = n
         self.cumulative_reward = 0
+        self.sampling_time = sampling_time
+        self.wardrop_epsilon = 0 #TODO
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
         if starting_position is not None and (starting_position[2] > 10 or starting_position[2] < 1):
@@ -37,9 +39,9 @@ class wireless_environment:
             ue_id = len(self.ue_list)
         
         if starting_position is None:
-            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed, direction)
+            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, (random.randint(0, self.x_limit),random.randint(0, self.y_limit),1), self, speed*self.sampling_time, direction)
         else: 
-            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, starting_position, self, speed, direction)
+            new_ue = ue.user_equipment(ue.ue_class[ue_class], ue_class, ue_id, starting_position, self, speed*self.sampling_time, direction)
         
         if (ue_id == len(self.ue_list)):
             self.ue_list.append(new_ue)

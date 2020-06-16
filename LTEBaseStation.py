@@ -130,7 +130,7 @@ class LTEBaseStation:
 
             self.allocated_bitrate += diff * r / 1000000
             self.ue_bitrate_allocation[ue_id] += diff * r / 1000000
-            
+
         N_prb = self.ue_pb_allocation[ue_id]
         return N_prb*r/1000000 #remember that we want the result in Mbps   
 
@@ -156,6 +156,9 @@ class LTEBaseStation:
     def reset(self):
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
+      
+    def compute_latency(self):
+        return 0 #TODO
         
     
 

@@ -33,15 +33,19 @@ class user_equipment:
         self.old_sevice_class = service_class
         self.service_class = service_class
         self.lambda_exp = ue_class_lambda[self.service_class]
-        self.current_bs = None
+        self.current_bs = {}
         self.actual_data_rate = 0
         self.last_action_t = 0
+
+        self.bs_bitrate_allocation = {}
 
         
 
     
     def move(self):
-        if self.RANDOM == 1:
+        if self.speed == 0:
+            return self.current_position
+        elif self.RANDOM == 1:
             return self.random_move()
         else:
             return self.line_move()
@@ -120,7 +124,7 @@ class user_equipment:
         if self.current_bs == None:
             self.connect_to_bs()
             return
-        '''
+        
         # compute the time spent in the service class
         #delta_t = (t+1) - (self.last_action_t+1)
         delta_t = 0
@@ -138,7 +142,7 @@ class user_equipment:
 
         prob = 1 - (1 - math.exp(-self.lambda_exp * delta_t))
         if random.random() > prob:
-            '''
+            
             # it's time to change service class
             print("CHANGED SERVICE CLASS: User ID %s has now changed to class %s" %(self.ue_id, self.service_class))
             self.disconnect_from_bs()
@@ -149,7 +153,7 @@ class user_equipment:
             # apply new class parameters: requested bitrate, lambda, last action time
             self.requested_bitrate = ue_class[self.service_class]
             self.lambda_exp = ue_class_lambda[self.service_class]
-            '''
+            
             self.last_action_t = t + 1
             self.connect_to_bs()
         
@@ -158,10 +162,13 @@ class user_equipment:
             self.disconnect_from_bs()
             self.connect_to_bs()
             #self.update_connection()
-        
+        '''
+        return
 
     def connect_to_bs_random(self):
         available_bs = self.env.discover_bs(self.ue_id)
+        bs = None
+        data_rate = None
         if len(available_bs) == 0:
             print("[NO BASE STATION FOUND]: User ID %s has not found any base station" %(self.ue_id))
             return
@@ -169,7 +176,9 @@ class user_equipment:
             #this means there is only one available bs, so we have to connect to it
             #bs = list(available_bs.keys())[0]
             #self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
-            self.current_bs , self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+            bs , data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+            self.current_bs[bs] = data_rate
+            self.actual_data_rate += data_rate
 
         else:
             if self.MATLAB == 1:
@@ -180,13 +189,16 @@ class user_equipment:
                 return
             else:
                 bs, rsrp = random.choice(list(available_bs.items()))
-                self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
                 #self.current_bs, self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
-                self.current_bs = bs
-        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
+                self.current_bs[bs] = data_rate
+                self.actual_data_rate += data_rate
+        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs[bs], data_rate, self.requested_bitrate))
     
     def connect_to_bs(self):
         available_bs = self.env.discover_bs(self.ue_id)
+        bs = None
+        data_rate = None
         if len(available_bs) == 0:
             print("[NO BASE STATION FOUND]: User ID %s has not found any base station" %(self.ue_id))
             return
@@ -194,7 +206,9 @@ class user_equipment:
             #this means there is only one available bs, so we have to connect to it
             #bs = list(available_bs.keys())[0]
             #self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)   
-            self.current_bs , self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+            bs, data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+            self.current_bs[bs] = data_rate
+            self.actual_data_rate += data_rate
 
         else:
             if self.MATLAB == 1:
@@ -206,23 +220,31 @@ class user_equipment:
             else:
                 #bs = max(available_bs, key = available_bs.get)
                 #self.actual_data_rate = util.find_bs_by_id(bs).request_connection(self.ue_id, self.requested_bitrate, available_bs)
-                self.current_bs, self.actual_data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                bs, data_rate = self.env.request_connection(self.ue_id, self.requested_bitrate, available_bs)
+                self.current_bs[bs] = data_rate
+                self.actual_data_rate += data_rate
                 #self.current_bs = bs
-        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
+        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs[bs], data_rate, self.requested_bitrate))
 
 
-    def disconnect_from_bs(self):
-        if self.current_bs != None:
-            util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
-            print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, self.current_bs))
-            self.current_bs = None
-            self.actual_data_rate = 0
+    def disconnect_from_bs(self, bs_id):
+        if bs_id in self.current_bs:
+            util.find_bs_by_id(bs_id).request_disconnection(self.ue_id)
+            print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, bs_id))
+            self.actual_data_rate -= self.current_bs[bs_id]
+            del self.current_bs[bs_id]
         return
         
+    def disconnect_from_all_bs(self):
+        for bs in self.current_bs:
+            util.find_bs_by_id(bs).request_disconnection(self.ue_id)
+            print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, bs))
+        self.actual_data_rate = 0
+        self.current_bs.clear()
 
     
     def update_connection(self):
-        if self.current_bs == None:
+        if len(self.current_bs) == 0:
             self.connect_to_bs()
             return
 
@@ -230,32 +252,88 @@ class user_equipment:
         #print(available_bs)
         if len(available_bs) == 0:
             print("[NO BASE STATION FOUND]: User ID %s has not found any base station during connection update" %(self.ue_id))
-        elif self.current_bs in available_bs:
-            self.actual_data_rate = util.find_bs_by_id(self.current_bs).update_connection(self.ue_id, self.requested_bitrate, available_bs)
-            if self.actual_data_rate < self.requested_bitrate:
-                print("[POOR BASE STATION]: User ID %s has a poor connection to its base station (actual data rate is %s/%s Mbps)" %(self.ue_id, self.actual_data_rate, self.requested_bitrate))
-                self.disconnect_from_bs()
+
+
+        for elem in self.current_bs:
+            if elem in available_bs:
+                data_rate = util.find_bs_by_id(self.current_bs).update_connection(self.ue_id, self.requested_bitrate, available_bs)
+                
+                self.actual_data_rate -= self.current_bs[elem]
+                self.current_bs[elem] = data_rate
+                self.actual_data_rate += self.current_bs[elem]
+
+                #TODO update the connections according to the newly computed requested bitrates coming from the next_timestep() function
+
+                if self.actual_data_rate < self.requested_bitrate:
+                    print("[POOR BASE STATION]: User ID %s has a poor connection to its base station (actual data rate is %s/%s Mbps)" %(self.ue_id, self.actual_data_rate, self.requested_bitrate))
+                    self.disconnect_from_bs(elem)
+                    self.connect_to_bs()
+                '''
+                elif random.random() < self.epsilon:
+                    print("[RANDOM DISCONNECTION]: User ID %s was randomly disconnected from its base station (actual data rate is %s/%s Mbps)" %(self.ue_id, self.actual_data_rate, self.requested_bitrate))
+                    self.disconnect_from_bs()
+                    self.connect_to_bs()
+                '''
+            else:
+                #in this case no current base station is anymore visible
+                print("[BASE STATION LOST]: User ID %s has not found its base station during connection update" %(self.ue_id))
+                self.disconnect_from_bs(elem)
                 self.connect_to_bs()
-            '''
-            elif random.random() < self.epsilon:
-                print("[RANDOM DISCONNECTION]: User ID %s was randomly disconnected from its base station (actual data rate is %s/%s Mbps)" %(self.ue_id, self.actual_data_rate, self.requested_bitrate))
-                self.disconnect_from_bs()
-                self.connect_to_bs()
-            '''
-        else:
-            #in this case the current base station is no more visible
-            print("[BASE STATION LOST]: User ID %s has not found its base station during connection update" %(self.ue_id))
-            self.disconnect_from_bs()
-            self.connect_to_bs()
 
         print("[CONNECTION_UPDATE]: User ID %s has updated its connection to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
+
+    def initial_timestep(self):
+        rsrp = self.env.discover_bs()
+        for elem in rsrp:
+            if elem not in self.bs_bitrate_allocation:
+                #this means that it is the first time we encounter that base station
+                if elem in self.current_bs:
+                    self.bs_bitrate_allocation[elem] = self.current_bs[elem]
+                else:
+                    self.bs_bitrate_allocation[elem] = 0
+        return
 
     def next_timestep(self):
         self.old_position = self.current_position
         self.move()
 
+        #compute the next state variable x^i_p[k+1], considering the visible base stations
+        rsrp = self.env.discover_bs()
+
+        #remove the old BSs that are out of visibility
+        for elem in self.bs_bitrate_allocation:
+            if elem not in rsrp:
+                del self.bs_bitrate_allocation[elem]
+
+        #add the new BSs 
+        for elem in rsrp:
+            if elem not in self.bs_bitrate_allocation:
+                self.bs_bitrate_allocation[elem] = 0
+
+        #core of the Wardrop algorithm
+        for p in self.bs_bitrate_allocation:
+            for q in self.bs_bitrate_allocation:
+                if p != q:
+                    l_p = util.find_bs_by_id(p).compute_latency()
+                    l_q = util.find_bs_by_id(q).compute_latency()
+
+                    mu_pq = 1
+                    if (l_p - l_q) < self.env.wardrop_epsilon:
+                        mu_pq = 0
+                    
+                    mu_qp = 1
+                    if (l_q - l_p) < self.env.wardrop_epsilon:
+                        mu_qp = 0
+
+                    r_pq = self.bs_bitrate_allocation[p]*mu_pq*1 #TODO
+                    r_qp = self.bs_bitrate_allocation[q]*mu_qp*1 #TODO
+
+                    self.bs_bitrate_allocation[p] += self.env.sampling_time * (r_qp - r_pq)          
+        return
+
+
     def reset(self, t):
-        self.disconnect_from_bs()
+        self.disconnect_from_all_bs()
         self.actual_data_rate = 0
         self.current_position = self.starting_position
         #self.service_class = self.old_sevice_class

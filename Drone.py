@@ -116,6 +116,9 @@ class DroneRelay:
         self.current_position = self.position
         self.theta_k = new_theta
 
+    def compute_latency(self):
+        return util.find_bs_by_id(self.linked_bs).compute_latency() #TODO
+
 
 
 #Table 5.3.3-1: Minimum guardband [kHz] (FR1) and Table: 5.3.3-2: Minimum guardband [kHz] (FR2), 3GPPP 38.104
@@ -362,5 +365,9 @@ class DroneBaseStation:
         self.h_b = new_z
         self.current_position = self.position
         self.theta_k = new_theta
+
+    
+    def compute_latency(self):
+        return 0 #TODO
 
     

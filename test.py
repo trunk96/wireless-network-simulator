@@ -13,7 +13,7 @@ N_UE = 1
 random.seed(2)
 
 
-env = environment.wireless_environment(4000)
+env = environment.wireless_environment(4000, sampling_time=0.001)
 ue = []
 bs = []
 
