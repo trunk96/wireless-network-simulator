@@ -12,12 +12,21 @@ N_UE = 50
 
 random.seed(2)
 
+
 env = environment.wireless_environment(4000)
 ue = []
 bs = []
 
 num = []
 den = []
+
+load_sat = []
+load_relay = []
+load_bs = []
+
+connected_sat = []
+connected_relay = []
+connected_bs = []
 
 '''
 if not os.path.exists("scenario.npy"):
@@ -50,7 +59,7 @@ bs.append(nr_bs2)
 drone_bs1 = env.place_DRONE_relay((5000, 3000, 200), nr_bs2, 800, 80, 16, 3)
 bs.append(drone_bs1)
 
-drone_bs2 = env.place_DRONE_base_station((5000, 3000, 200), 800, 2, 10, 10, 1, 100)
+drone_bs2 = env.place_DRONE_base_station((6500, 3000, 200), 800, 2, 15, 15, 1, 100)
 bs.append(drone_bs2)
 '''
 nr_bs1 = env.place_NR_base_station((8000, 2000, 40), 800, 2, 20, 16, 3, 100)
@@ -86,36 +95,204 @@ if PLOT:
 #time.sleep(1)
 env.next_timestep()
 '''
-
+start_move = False
+status = random.getstate()
 #util.find_ue_by_id(0).disconnect_from_bs()
-for cycle in range (0, 250):
+for cycle in range (0, 330):
     print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
     random.shuffle(ue)
     num.append(0)
     den.append(0)
+    sat = util.find_bs_by_id(0)
+    load_sat.append(0)
+    load_relay.append(0)
+    load_bs.append(0)
+
     for j in range(0, len(ue)):
         print("\n\n")
         ue_j = util.find_ue_by_id(ue[j])
         ue_j.do_action(cycle)
-        num[cycle] += ue_j.actual_data_rate
-        den[cycle] += 1
+        if ue_j.current_bs != None:
+            num[cycle] += ue_j.actual_data_rate
+            den[cycle] += 1
+        if ue_j.current_bs == 0:
+            load_sat[cycle] += ue_j.actual_data_rate
+        elif ue_j.current_bs == 2:
+            load_relay[cycle] += ue_j.actual_data_rate
+        elif ue_j.current_bs == 3:
+            load_bs[cycle] += ue_j.actual_data_rate        
         print("\n\n")
-    util.find_bs_by_id(bs[2]).move((3500, 1000, 150), 20)
-    util.find_bs_by_id(bs[3]).move((1000, 2000, 150), 20)
+    '''
+    t = util.find_bs_by_id(0).compute_rbur()
+    load_sat.append(t*100)
+    t = util.find_bs_by_id(2).compute_rbur()
+    load_relay.append(t*100)
+    t = util.find_bs_by_id(3).compute_rbur()
+    load_bs.append(t*100)
+    '''
+
+    l = len(util.find_bs_by_id(0).get_connected_users())
+    connected_sat.append(l)
+    l = len(util.find_bs_by_id(2).get_connected_users())
+    connected_relay.append(l)
+    l = len(util.find_bs_by_id(3).get_connected_users())
+    connected_bs.append(l)
+
+    if sat.compute_rbur() > 0.2:
+        start_move = True
+    start_move = True ##
+    if start_move:
+        util.find_bs_by_id(bs[2]).move((3500, 1000, 150), 20)
+        #util.find_bs_by_id(bs[2]).move((3500, 2000, 150), 20)
+        util.find_bs_by_id(bs[3]).move((1000, 2000, 150), 20)
+        #util.find_bs_by_id(bs[3]).move((2000, 500, 150), 20)
+
+    if PLOT and cycle == 329:
+        util.plot(ue, bs, env)
+        plt.pause(0.1)
+    env.next_timestep()
+
+#plt.pause(15)
+
+#res1 = [x/y for x, y in zip(num, den)]
+res1 = []
+for n in range(len(num)):
+    if den[n] != 0:
+        res1.append(num[n]/den[n])
+    else:
+        res1.append(None)
+
+'''
+start_move = False
+random.setstate(status)
+num = []
+den = []
+load_sat1 = []
+load_bs1 = []
+load_relay1 = []
+connected_sat1 = []
+connected_relay1 = []
+connected_bs1 = []
+env.reset(0)
+
+for cycle in range (0, 330):
+    print("------------------------------------------------------CYCLE %s------------------------------------------------------" %cycle)
+    random.shuffle(ue)
+    num.append(0)
+    den.append(0)
+    sat = util.find_bs_by_id(0)
+    
+    load_sat1.append(0)
+    load_bs1.append(0)
+    load_relay1.append(0)
+
+    for j in range(0, len(ue)):
+        print("\n\n")
+        ue_j = util.find_ue_by_id(ue[j])
+        ue_j.do_action(cycle)
+        if ue_j.current_bs != None:
+            num[cycle] += ue_j.actual_data_rate
+            den[cycle] += 1
+        if ue_j.current_bs == 0:
+            load_sat1[cycle] += ue_j.actual_data_rate
+        elif ue_j.current_bs == 2:
+            load_relay1[cycle] += ue_j.actual_data_rate
+        elif ue_j.current_bs == 3:
+            load_bs1[cycle] += ue_j.actual_data_rate    
+        print("\n\n")
+    
+    COMMENT HERE
+    t = util.find_bs_by_id(0).compute_rbur()
+    load_sat1.append(t*100)
+    t = util.find_bs_by_id(2).compute_rbur()
+    load_relay1.append(t*100)
+    t = util.find_bs_by_id(3).compute_rbur()
+    load_bs1.append(t*100)
+    
+
+
+    l = len(util.find_bs_by_id(0).get_connected_users())
+    connected_sat1.append(l)
+    l = len(util.find_bs_by_id(2).get_connected_users())
+    connected_relay1.append(l)
+    l = len(util.find_bs_by_id(3).get_connected_users())
+    connected_bs1.append(l)
+
+    if sat.compute_rbur() > 2: #impossible, so they never moves
+        start_move = True
+    if start_move:
+        util.find_bs_by_id(bs[2]).move((3500, 1000, 150), 20)
+        util.find_bs_by_id(bs[3]).move((1000, 2000, 150), 20)
 
     if PLOT:
         util.plot(ue, bs, env)
         plt.pause(0.1)
     env.next_timestep()
 
-res = [x/y for x, y in zip(num, den)]
-print(res)
+res2 = []
+for n in range(len(num)):
+    if den[n] != 0:
+        res2.append(num[n]/den[n])
+    else:
+        res2.append(None)
+#res2 = [x/y for x, y in zip(num, den)]
+#print(res)
+'''
 
-fig, ax = plt.subplots()
-ax.plot(res)
-ax.set_title("Mean datarate")
+fig, axs = plt.subplots(3)
+#fig1, axs1 = plt.subplots(3)
+axs[0].plot(load_sat, 'k')
+axs[0].plot(load_relay, 'k-.')
+axs[0].plot(load_bs, 'k--')
+'''
+axs1[0].plot(load_sat1, 'k')
+axs1[0].plot(load_relay1, 'k-.')
+axs1[0].plot(load_bs1, 'k--')
+'''
+axs[0].set_xlabel("Time (s)")
+axs[0].set_ylabel("Load (Mbps)")
+'''
+axs1[0].set_xlabel("Time (s)")
+axs1[0].set_ylabel("Load (Mbps)")
+'''
+'''
+axs1[0].set_ylim(-10, max(load_sat1) + 50)
+'''
+axs[0].set_ylim(-10, max(load_sat) + 50)
+#plt.tight_layout()
+
+#fig, axs = plt.subplots()
+axs[1].plot(connected_sat, 'k')
+axs[1].plot(connected_relay, 'k-.')
+axs[1].plot(connected_bs, 'k--')
+'''
+axs1[1].plot(connected_sat1, 'k')
+axs1[1].plot(connected_relay1, 'k-.')
+axs1[1].plot(connected_bs1, 'k--')
+'''
+axs[1].set_xlabel("Time (s)")
+axs[1].set_ylabel("Connected UEs")
+axs[1].set_ylim(-1, 51)
+'''
+axs1[1].set_xlabel("Time (s)")
+axs1[1].set_ylabel("Connected UEs")
+axs1[1].set_ylim(-1, 51)
+#plt.tight_layout()
+'''
+#fig, ax = plt.subplots()
+axs[2].plot(res1, 'k')
+axs[2].set_xlabel("Time (s)")
+axs[2].set_ylabel("Bitrate (Mbps)")
+axs[2].set_ylim(5, 11)
+
+'''
+axs1[2].plot(res2, 'k')
+axs1[2].set_xlabel("Time (s)")
+axs1[2].set_ylabel("Bitrate (Mbps)")
+axs1[2].set_ylim(5, 11)
+'''
+plt.tight_layout()
 plt.show()
-
 
 #util.find_ue_by_id(id).update_connection()
 #print(sat.ue_allocation)

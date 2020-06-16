@@ -7,11 +7,11 @@ MAX_STEP = 2000
 
 # service classes for UEs, "class: Mbps"
 ue_class = {
-    0: 5,
+    0: 10,
     1: 3
 }
 ue_class_lambda = {
-    0: 1/20,
+    0: 1/4000,
     1: 1/15
 }
 
@@ -36,6 +36,7 @@ class user_equipment:
         self.current_bs = None
         self.actual_data_rate = 0
         self.last_action_t = 0
+
         
 
     
@@ -115,14 +116,29 @@ class user_equipment:
         return self.current_position
 
     def do_action(self, t):
+        '''
         if self.current_bs == None:
             self.connect_to_bs()
             return
+        '''
         # compute the time spent in the service class
-        delta_t = 0# t - self.last_action_t
-        # compute probability of change action
+        #delta_t = (t+1) - (self.last_action_t+1)
+        delta_t = 0
+        if self.last_action_t > 0 and t + 1 - self.last_action_t > 40:
+            if self.actual_data_rate < self.requested_bitrate/2:
+                self.disconnect_from_bs()
+                return
+            else:
+                self.disconnect_from_bs()
+                self.connect_to_bs() 
+                return
+        elif self.last_action_t > 0:
+            self.disconnect_from_bs()
+            self.connect_to_bs()
+
         prob = 1 - (1 - math.exp(-self.lambda_exp * delta_t))
         if random.random() > prob:
+            '''
             # it's time to change service class
             print("CHANGED SERVICE CLASS: User ID %s has now changed to class %s" %(self.ue_id, self.service_class))
             self.disconnect_from_bs()
@@ -133,12 +149,16 @@ class user_equipment:
             # apply new class parameters: requested bitrate, lambda, last action time
             self.requested_bitrate = ue_class[self.service_class]
             self.lambda_exp = ue_class_lambda[self.service_class]
-            self.last_action_t = t
+            '''
+            self.last_action_t = t + 1
             self.connect_to_bs()
+        
+        #just in scenario 1, otherwise comment
         else:
             self.disconnect_from_bs()
             self.connect_to_bs()
             #self.update_connection()
+        
 
     def connect_to_bs_random(self):
         available_bs = self.env.discover_bs(self.ue_id)
@@ -196,7 +216,7 @@ class user_equipment:
             util.find_bs_by_id(self.current_bs).request_disconnection(self.ue_id)
             print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, self.current_bs))
             self.current_bs = None
-            #self.actual_data_rate = 0
+            self.actual_data_rate = 0
         return
         
 
@@ -236,10 +256,11 @@ class user_equipment:
 
     def reset(self, t):
         self.disconnect_from_bs()
+        self.actual_data_rate = 0
         self.current_position = self.starting_position
-        self.service_class = self.old_sevice_class
-        self.lambda_exp = ue_class_lambda[self.service_class]
-        self.requested_bitrate = ue_class[self.service_class]
+        #self.service_class = self.old_sevice_class
+        #self.lambda_exp = ue_class_lambda[self.service_class]
+        #self.requested_bitrate = ue_class[self.service_class]
         self.last_action_t = t
 
         

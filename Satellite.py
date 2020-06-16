@@ -46,7 +46,7 @@ class Satellite:
         self.guard_space = 64  # fixed [symbols]
         self.total_users = 0
         self.frame_duration = 2 # lenght of the frame in milliseconds
-        self.total_symbols = 39104 - 288*2 - 64*2 #(self.frame_length - 288*2 - 64*2) # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
+        self.total_symbols = (self.frame_length - 288*2 - 64*2)#39104 - 288*2 - 64*2 #(self.frame_length - 288*2 - 64*2) # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
         self.frame_utilization = 0  # allocated resources
         self.ue_allocation = {}
 

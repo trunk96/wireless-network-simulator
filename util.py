@@ -127,4 +127,6 @@ def plot(ue, bs, env):
         ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))
 
     ax.grid(True)
+    ax.set_ylabel("[m]")
+    ax.set_xlabel("[m]")
     fig.canvas.draw()

@@ -160,3 +160,8 @@ class wireless_environment:
             # it should never go here (there are checks on actions in the argmax)
             return -10000
 
+    def reset(self, cycle):
+        for ue in self.ue_list:
+            ue.reset(cycle)
+        for bs in self.bs_list:
+            bs.reset()

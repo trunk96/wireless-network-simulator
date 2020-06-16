@@ -26,6 +26,7 @@ class DroneRelay:
             self.fr = 1
         self.position = (position[0],position[1])
         self.current_position = self.position
+        self.starting_position = position
         self.h_b = position[2]
         self.h_m = position[2]
         self.env = env
@@ -81,6 +82,10 @@ class DroneRelay:
         return util.find_bs_by_id(self.linked_bs).get_connected_users()
 
     def reset(self):
+        self.position = (self.starting_position[0], self.starting_position[1])
+        self.current_position = self.position
+        self.h_b = self.starting_position[2]
+        self.h_m = self.starting_position[2]
         return util.find_bs_by_id(self.linked_bs).reset()
 
     def move(self, destination, speed):
@@ -107,6 +112,7 @@ class DroneRelay:
         new_theta = self.theta_k + w_k
         self.position = (new_x, new_y)
         self.h_b = new_z
+        self.h_m = new_z
         self.current_position = self.position
         self.theta_k = new_theta
 
@@ -194,6 +200,7 @@ class DroneBaseStation:
         elif (carrier_frequency >= 24250 and carrier_frequency <= 52600): #between 24.25GHz and 52.6GHz
             self.fr = 1
         self.position = (position[0],position[1])
+        self.starting_position = position
         self.h_b = position[2]
         self.number_subcarriers = number_subcarriers
         self.env = env
@@ -219,7 +226,7 @@ class DroneBaseStation:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb / (10 * 2**self.numerology))]*1000000
+        thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb / (10 * 2**self.numerology))]*1000000*(self.compute_rbur()+0.001)
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
@@ -295,6 +302,8 @@ class DroneBaseStation:
     def reset(self):
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
+        self.position = (self.starting_position[0], self.starting_position[1])
+        self.h_b = self.starting_position[2]
 
     def move(self, destination, speed):
         x_k = destination[0] - self.position[0]
