@@ -52,26 +52,26 @@ class wireless_environment:
         self.ue_list[ue_id] = None
 
     
-    def place_SAT_base_station(self, position):       
-        new_bs = SATbs.Satellite(len(self.bs_list), position, self)
+    def place_SAT_base_station(self, total_bitrate, position):       
+        new_bs = SATbs.Satellite(len(self.bs_list), total_bitrate, position, self)
         
         self.bs_list.append(new_bs)
         return new_bs.bs_id
 
-    def place_LTE_base_station(self, position, carrier_frequency, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
+    def place_LTE_base_station(self, position, carrier_frequency, antenna_power, antenna_gain, feeder_loss, available_bandwidth, total_bitrate):
         
         if (available_bandwidth in LTEbs.LTEbandwidth_prb_lookup):
             #  LTE standard defines 12 subcarriers of 15KHz each, so the pbr_bandwidth is 180KHz
             #  LTEbandwidth_prb_lookup defines the number of blocks of 180KHz available in the specified bandwidth,
             #  so we have to multiply by the number of time slots (sub-frames in LTE terminology) in a time frame
-            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth] * 10, 180, 12, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+            new_bs = LTEbs.LTEBaseStation(len(self.bs_list), LTEbs.LTEbandwidth_prb_lookup[available_bandwidth] * 10, 180, 12, antenna_power, antenna_gain, feeder_loss, carrier_frequency, total_bitrate, position, self)
         else:
             raise Exception("if you indicate the available bandwidth, it must be 1.4, 3, 5, 10, 15 or 20 MHz")
         
         self.bs_list.append(new_bs)
         return new_bs.bs_id
     
-    def place_NR_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, drone = False):
+    def place_NR_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, total_bitrate = 0, drone = False):
         #check if the bandwith is in line with the specified numerology and specified carrier frequency
         fr = -1
         if (carrier_frequency <= 6000):  #below 6GHz
@@ -86,9 +86,9 @@ class wireless_environment:
             #  NRbandwidth_prb_lookup defines the number of blocks of 180KHz available in the specified bandwidth with a certain numerology,
             #  so we have to multiply by the number of time slots (sub-frames in LTE terminology) in a time frame
             if drone == False:
-                new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+                new_bs = NRbs.NRBaseStation(len(self.bs_list), NRbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, total_bitrate, position, self)
             else:
-                new_bs = DRONEbs.DroneBaseStation(len(self.bs_list), DRONEbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, self)
+                new_bs = DRONEbs.DroneBaseStation(len(self.bs_list), DRONEbs.NRbandwidth_prb_lookup[numerology][fr][available_bandwidth] * (10 * 2**numerology), prb_size, 12, numerology, antenna_power, antenna_gain, feeder_loss, carrier_frequency, total_bitrate, position, self)
         else:
             raise Exception("The choosen bandwidth is not present in 5G NR standard with such numerology and frequency range")
 
@@ -100,8 +100,8 @@ class wireless_environment:
         self.bs_list.append(new_bs)
         return new_bs.bs_id
 
-    def place_DRONE_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth):
-        return self.place_NR_base_station(position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, drone = True)
+    def place_DRONE_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, total_bitrate):
+        return self.place_NR_base_station(position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, total_bitrate, drone = True)
     
     #this method shall be called by an UE 
     #that wants to have a measure of the RSRP 

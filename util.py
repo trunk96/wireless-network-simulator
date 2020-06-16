@@ -21,7 +21,11 @@ def compute_rsrp(ue, bs, env):
     else:
         #lte and nr case
         path_loss = compute_path_loss_cost_hata(ue, bs, env)
-        subcarrier_power = 10*math.log10(bs.antenna_power*1000 / (bs.total_prb*bs.number_subcarriers))
+        subcarrier_power = 0
+        if (bs.bs_type == "lte"):
+            subcarrier_power = 10*math.log10(bs.antenna_power*1000 / ((bs.total_prb/10)*bs.number_subcarriers))
+        else:
+            subcarrier_power = 10*math.log10(bs.antenna_power*1000 / ((bs.total_prb/(10*2**bs.numerology))*bs.number_subcarriers))
         return subcarrier_power + bs.antenna_gain - bs.feeder_loss - path_loss
 
 def compute_path_loss_cost_hata(ue, bs, env, save = None):

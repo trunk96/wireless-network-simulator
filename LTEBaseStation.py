@@ -14,7 +14,7 @@ LTEbandwidth_prb_lookup = {
 class LTEBaseStation:
     bs_type = "lte"
 
-    def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, position, env):
+    def __init__(self, bs_id, total_prb, prb_bandwidth_size, number_subcarriers, antenna_power, antenna_gain, feeder_loss, carrier_frequency, total_bitrate, position, env):
         if position[2] > 200 or position[2] < 30:
             raise Exception("COST-HATA model requires BS height in [30, 200]m")
         
@@ -23,7 +23,9 @@ class LTEBaseStation:
         
         self.prb_bandwidth_size = prb_bandwidth_size
         self.total_prb = total_prb
+        self.total_bitrate = total_bitrate #Mbps
         self.allocated_prb = 0
+        self.allocated_bitrate = 0
         self.antenna_power = antenna_power
         self.antenna_gain = antenna_gain
         self.feeder_loss = feeder_loss
@@ -34,6 +36,7 @@ class LTEBaseStation:
         self.number_subcarriers = number_subcarriers
         self.env = env
         self.ue_pb_allocation = {}
+        self.ue_bitrate_allocation = {}        
         self.T = 10
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
@@ -51,7 +54,8 @@ class LTEBaseStation:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
-        thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb / 10)]*1000000*self.compute_rbur()
+        #thermal_noise = constants.Boltzmann*293.15*list(LTEbandwidth_prb_lookup.keys())[list(LTEbandwidth_prb_lookup.values()).index(self.total_prb / 10)]*1000000*self.compute_rbur()
+        thermal_noise = constants.Boltzmann*293.15*15*1000 # delta_F = 12*15KHz each resource block since we are considering resource block related measurements (like RSRP)
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         
         r = self.prb_bandwidth_size*1000*math.log2(1+sinr) #bandwidth is in kHz
@@ -65,6 +69,15 @@ class LTEBaseStation:
     def request_connection(self, ue_id, data_rate, rsrp):
         
         N_prb, r = self.compute_nprb_LTE(data_rate, rsrp)
+        old_N_prb = N_prb
+
+        #check if there is enough bitrate, if not then do not allocate the user
+        if self.total_bitrate - self.allocated_bitrate < r*N_prb/1000000:
+            self.ue_bitrate_allocation[ue_id] = 0
+            self.ue_pb_allocation[ue_id] = 0
+            return 0
+
+        #check if there are enough PRBs
         if self.total_prb - self.allocated_prb <= N_prb:
             N_prb = self.total_prb - self.allocated_prb
 
@@ -74,8 +87,17 @@ class LTEBaseStation:
         else:
             self.allocated_prb -= self.ue_pb_allocation[ue_id]
             self.ue_pb_allocation[ue_id] = N_prb
-            self.allocated_prb += N_prb   
-        print(N_prb)
+            self.allocated_prb += N_prb 
+
+        if ue_id not in self.ue_bitrate_allocation:
+            self.ue_bitrate_allocation[ue_id] = r * N_prb / 1000000  
+            self.allocated_bitrate += r * N_prb / 1000000
+        else:
+            self.allocated_bitrate -= self.ue_bitrate_allocation[ue_id]
+            self.ue_bitrate_allocation[ue_id] = r * N_prb * 1000000
+            self.allocated_bitrate += r * N_prb / 1000000
+
+        print("Allocated %s/%s LTE PRB" %(N_prb, old_N_prb)) 
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
@@ -88,15 +110,27 @@ class LTEBaseStation:
 
         N_prb, r = self.compute_nprb_LTE(data_rate, rsrp)
         diff = N_prb - self.ue_pb_allocation[ue_id]
+
+        #check before if there is enough bitrate
+        if self.total_bitrate - self.allocated_bitrate < diff * r / 100000:
+            return self.ue_pb_allocation[ue_id] * r / 1000000
+
         if self.total_prb - self.allocated_prb >= diff:
             #there is the place for more PRB allocation (or less if diff is negative)
             self.allocated_prb += diff
             self.ue_pb_allocation[ue_id] += diff
+
+            self.allocated_bitrate += diff * r / 1000000
+            self.ue_bitrate_allocation[ue_id] += diff * r / 1000000
         else:
             #there is no room for more PRB allocation
             diff = self.total_prb - self.allocated_prb
             self.allocated_prb += diff
             self.ue_pb_allocation[ue_id] += diff
+
+            self.allocated_bitrate += diff * r / 1000000
+            self.ue_bitrate_allocation[ue_id] += diff * r / 1000000
+            
         N_prb = self.ue_pb_allocation[ue_id]
         return N_prb*r/1000000 #remember that we want the result in Mbps   
 
