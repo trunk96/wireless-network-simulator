@@ -117,7 +117,10 @@ class DroneRelay:
         self.theta_k = new_theta
 
     def compute_latency(self):
-        return util.find_bs_by_id(self.linked_bs).compute_latency() #TODO
+        return util.find_bs_by_id(self.linked_bs).compute_latency() 
+
+    def compute_r(self, ue_id, rsrp):
+        return util.find_bs_by_id(self.linked_bs).compute_r(ue_id, rsrp)
 
 
 
@@ -212,6 +215,7 @@ class DroneBaseStation:
         self.numerology = numerology
         self.ue_pb_allocation = {}
         self.ue_bitrate_allocation = {}
+        self.wardrop_alpha = 1
         self.T = 10
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
@@ -368,6 +372,10 @@ class DroneBaseStation:
 
     
     def compute_latency(self):
-        return 0 #TODO
+        return self.wardrop_alpha * self.allocated_prb
+
+    def compute_r(self, ue_id, rsrp):
+        N_prb, r = self.compute_nprb_NR(1, rsrp)
+        return r
 
     

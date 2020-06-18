@@ -53,6 +53,8 @@ class Satellite:
         self.ue_allocation = {}
         self.ue_bitrate_allocation ={}
 
+        self.wardrop_alpha = 1
+
         self.T = 10
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
@@ -235,4 +237,9 @@ class Satellite:
         self.resource_utilization_counter = 0
 
     def compute_latency(self):
-        return 0 #TODO
+        return self.wardrop_alpha * self.frame_utilization/64 
+
+    def compute_r(self, ue_id, rsrp):
+        N_symb, r = self.compute_nsymb_SAT(1, rsrp)
+        #we are interested in the r of a block, not of a single symbol
+        return r*64

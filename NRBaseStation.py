@@ -96,6 +96,7 @@ class NRBaseStation:
         self.T = 10
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
+        self.wardrop_alpha = 1
 
 
     def compute_rbur(self):
@@ -218,6 +219,9 @@ class NRBaseStation:
         self.resource_utilization_counter = 0
 
     def compute_latency(self):
-        return 0 #TODO
+        return self.wardrop_alpha * self.allocated_prb
 
+    def compute_r(self, ue_id, rsrp):
+        N_prb, r = self.compute_nprb_NR(1, rsrp)
+        return r
     

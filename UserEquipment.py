@@ -38,10 +38,9 @@ class user_equipment:
         self.last_action_t = 0
 
         self.bs_bitrate_allocation = {}
+        self.wardrop_sigma = 0
 
-        
-
-    
+           
     def move(self):
         if self.speed == 0:
             return self.current_position
@@ -164,7 +163,8 @@ class user_equipment:
             #self.update_connection()
         '''
         return
-
+    
+    #deprecated
     def connect_to_bs_random(self):
         available_bs = self.env.discover_bs(self.ue_id)
         bs = None
@@ -195,6 +195,7 @@ class user_equipment:
                 self.actual_data_rate += data_rate
         print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs[bs], data_rate, self.requested_bitrate))
     
+    #deprecated
     def connect_to_bs(self):
         available_bs = self.env.discover_bs(self.ue_id)
         bs = None
@@ -224,8 +225,25 @@ class user_equipment:
                 self.current_bs[bs] = data_rate
                 self.actual_data_rate += data_rate
                 #self.current_bs = bs
-        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs[bs], data_rate, self.requested_bitrate))
+        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, bs, data_rate, self.requested_bitrate))
 
+    def connect_to_bs_id(self, bs_id):
+        available_bs = self.env.discover_bs(self.ue_id)
+        bs = None
+        data_rate = None
+        if bs_id not in available_bs:
+            print("[NO BASE STATION FOUND]: User ID %s has not found the selected base station (BS %s)" %(self.ue_id, bs_id))
+            return
+        else:
+            if bs_id not in self.bs_bitrate_allocation:
+                print("[NO ALLOCATION FOR THIS BASE STATION FOUND]: User ID %s has not found any bitrate allocation for the selected base station (BS %s)" %(self.ue_id, bs_id))
+                return
+            elif self.bs_bitrate_allocation[bs_id] == 0:
+                return
+            data_rate = util.find_bs_by_id(bs_id).request_connection(self.ue_id, self.bs_bitrate_allocation[bs_id], available_bs)
+            self.current_bs[bs_id] = data_rate
+            self.actual_data_rate += data_rate
+        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, bs_id, data_rate, self.requested_bitrate))
 
     def disconnect_from_bs(self, bs_id):
         if bs_id in self.current_bs:
@@ -283,14 +301,17 @@ class user_equipment:
         print("[CONNECTION_UPDATE]: User ID %s has updated its connection to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, self.current_bs, self.actual_data_rate, self.requested_bitrate))
 
     def initial_timestep(self):
-        rsrp = self.env.discover_bs()
+        rsrp = self.env.discover_bs(self.ue_id)
+        bs = max(rsrp, key = rsrp.get)
+        self.bs_bitrate_allocation[bs] = self.requested_bitrate
         for elem in rsrp:
             if elem not in self.bs_bitrate_allocation:
                 #this means that it is the first time we encounter that base station
-                if elem in self.current_bs:
-                    self.bs_bitrate_allocation[elem] = self.current_bs[elem]
-                else:
-                    self.bs_bitrate_allocation[elem] = 0
+                self.bs_bitrate_allocation[elem] = 0
+        
+        #compute wardrop sigma
+        self.wardrop_sigma = (self.env.wardrop_epsilon)/(2*self.env.sampling_time*self.env.wardrop_beta*self.requested_bitrate*(len(rsrp)-1)*len(self.env.ue_list))
+
         return
 
     def next_timestep(self):
@@ -298,7 +319,7 @@ class user_equipment:
         self.move()
 
         #compute the next state variable x^i_p[k+1], considering the visible base stations
-        rsrp = self.env.discover_bs()
+        rsrp = self.env.discover_bs(self.ue_id)
 
         #remove the old BSs that are out of visibility
         for elem in self.bs_bitrate_allocation:
@@ -314,19 +335,22 @@ class user_equipment:
         for p in self.bs_bitrate_allocation:
             for q in self.bs_bitrate_allocation:
                 if p != q:
-                    l_p = util.find_bs_by_id(p).compute_latency()
-                    l_q = util.find_bs_by_id(q).compute_latency()
+                    bs_p = util.find_bs_by_id(p)
+                    l_p = bs_p.compute_latency()
 
+                    bs_q = util.find_bs_by_id(q)
+                    l_q = bs_q.compute_latency()
+                    
                     mu_pq = 1
-                    if (l_p - l_q) < self.env.wardrop_epsilon:
+                    if (l_p - l_q) < self.env.wardrop_epsilon or self.bs_bitrate_allocation[q] >= bs_q.total_bitrate - (self.env.wardrop_epsilon/(2*self.env.wardrop_beta)):
                         mu_pq = 0
                     
                     mu_qp = 1
-                    if (l_q - l_p) < self.env.wardrop_epsilon:
+                    if (l_q - l_p) < self.env.wardrop_epsilon or self.bs_bitrate_allocation[p] >= bs_p.total_bitrate - (self.env.wardrop_epsilon/(2*self.env.wardrop_beta)):
                         mu_qp = 0
 
-                    r_pq = self.bs_bitrate_allocation[p]*mu_pq*1 #TODO
-                    r_qp = self.bs_bitrate_allocation[q]*mu_qp*1 #TODO
+                    r_pq = self.bs_bitrate_allocation[p]*mu_pq*self.wardrop_sigma
+                    r_qp = self.bs_bitrate_allocation[q]*mu_qp*self.wardrop_sigma
 
                     self.bs_bitrate_allocation[p] += self.env.sampling_time * (r_qp - r_pq)          
         return
