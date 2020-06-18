@@ -24,7 +24,7 @@ class wireless_environment:
         self.x_limit = n
         self.cumulative_reward = 0
         self.sampling_time = sampling_time
-        self.wardrop_epsilon = 0 #TODO
+        self.wardrop_epsilon = 0.01 #TODO
         self.wardrop_beta = 0
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):

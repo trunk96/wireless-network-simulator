@@ -26,7 +26,7 @@ sat_bs = env.place_SAT_base_station(10000, (2000, 2000))
 bs.append(sat_bs)
 
 #nr_bs2 = env.place_NR_base_station((1500, 1500, 40), 800, 2, 20, 16, 3, 100, total_bitrate = 10000)
-nr_bs2 = env.place_NR_base_station((6000, 6000, 40), 800, 1, 20, 16, 3, 20, total_bitrate = 10000)
+nr_bs2 = env.place_NR_base_station((1500, 1500, 40), 800, 1, 20, 16, 3, 20, total_bitrate = 10000)
 bs.append(nr_bs2)
 
 #lte_bs = env.place_LTE_base_station((500, 500, 40), 700, 20, 16, 3, 20, total_bitrate = 10000)
@@ -58,3 +58,16 @@ bs.append(sat)
 '''
 env.initial_timestep();
 print(env.wardrop_beta)
+
+phone = util.find_ue_by_id(0)
+print(phone.bs_bitrate_allocation)
+
+phone.connect_to_bs_id(1)
+phone.connect_to_bs_id(0)
+env.next_timestep()
+print(phone.bs_bitrate_allocation)
+
+for i in range(0,100000):
+    phone.update_connection()
+    env.next_timestep()
+    print(phone.bs_bitrate_allocation)
