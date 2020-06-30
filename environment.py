@@ -142,9 +142,10 @@ class wireless_environment:
         return
 
     def next_timestep(self):
-        with ThreadPoolExecutor(max_workers=len(self.ue_list)) as executor:
-            for ue in self.ue_list:
-                thread = executor.submit(ue.next_timestep())
+        #with ThreadPoolExecutor(max_workers=len(self.ue_list)) as executor:
+        for ue in self.ue_list:
+            #thread = executor.submit()
+            ue.next_timestep()
         for bs in self.bs_list:
             bs.next_timestep()
 

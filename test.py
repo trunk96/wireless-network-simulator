@@ -8,8 +8,8 @@ import time
 import os
 
 PLOT = False
-N_UE = 5
-ITER = 10000 
+N_UE = 10
+ITER = 10000    
 
 SELECTED_UE = 3
 
@@ -122,7 +122,7 @@ parm = [
     "gain": 5,
     "loss": 1,
     "bandwidth": 40,
-    "max_bitrate": 100},
+    "max_bitrate": 0.5},
 
     #BS10
     {"pos": (3500, 2000, 40),
@@ -132,7 +132,7 @@ parm = [
     "gain": 5,
     "loss": 1,
     "bandwidth": 40,
-    "max_bitrate": 20},
+    "max_bitrate": 100},
 
     #BS11
     {"pos": (2000, 3000, 40),
@@ -232,8 +232,14 @@ for i in range(0,ITER):
         #print(util.find_bs_by_id(2).get_state())
         #print(util.find_bs_by_id(2).allocated_bitrate)
         #print(util.find_bs_by_id(2).ue_bitrate_allocation)
+        
         print("BITRATE: ", util.find_ue_by_id(SELECTED_UE).bs_bitrate_allocation)
         print("ACTUAL BITRATE: ", util.find_ue_by_id(SELECTED_UE).current_bs)
+        rsrp = env.discover_bs(SELECTED_UE)
+        sinr = {}
+        for bsc in rsrp:
+            sinr[bsc] = util.find_bs_by_id(bsc).compute_sinr(rsrp)
+        print("SINR: ", sinr)
         if(i!= 0):
             print("LATENCY: ", latency[i-1])
         prb_dict = {}
@@ -245,6 +251,14 @@ for i in range(0,ITER):
         print("PRB: ",prb_dict)
         #print(util.find_bs_by_id(2).ue_pb_allocation[SELECTED_UE])
         
+        for bsi in bs:
+            if util.find_bs_by_id(bsi).bs_type != "sat":
+                print("BS ", bsi, " PRB: ", util.find_bs_by_id(bsi).allocated_prb, "/", util.find_bs_by_id(bsi).total_prb)
+            else:
+                print("BS ", bsi, " PRB: ", util.find_bs_by_id(bsi).frame_utilization/64, "/", util.find_bs_by_id(bsi).total_symbols/64)
+        
+
+        
     max_e = 0
     for phone in ue:
         #print(phone)
@@ -253,13 +267,13 @@ for i in range(0,ITER):
         l_max = 0
         l_min = float("inf")
         latency_phone={}
-        for bs in util.find_ue_by_id(phone).bs_bitrate_allocation:
-            l = util.find_bs_by_id(bs).compute_latency(phone)
+        for bsa in util.find_ue_by_id(phone).bs_bitrate_allocation:
+            l = util.find_bs_by_id(bsa).compute_latency(phone)
             if (phone == SELECTED_UE):
-                latency_phone[bs]=l
-            if util.find_ue_by_id(phone).bs_bitrate_allocation[bs] > 0.0001 and l > l_max:
+                latency_phone[bsa]=l
+            if util.find_ue_by_id(phone).bs_bitrate_allocation[bsa] > 0.0001 and l > l_max:
                 l_max = l
-            elif util.find_ue_by_id(phone).bs_bitrate_allocation[bs] < util.find_bs_by_id(bs).total_bitrate-(env.wardrop_epsilon/(2*env.wardrop_beta)) and l < l_min:
+            elif util.find_ue_by_id(phone).bs_bitrate_allocation[bsa] < util.find_bs_by_id(bsa).total_bitrate-(env.wardrop_epsilon/(2*env.wardrop_beta)) and l < l_min:
                 l_min = l
         e = l_max - l_min
         if e > max_e:
@@ -277,33 +291,23 @@ for phone in ue:
 print("\n\n---------------------------------------------------\n\n")
 #print(latency)
 print(util.find_ue_by_id(3).current_position)
-l_2 = []
-l_0 = []
-l_1 = []
-l_10 = []
 
-
-
+latency_dict = {}
 for elem in latency:
-    l_2.append(elem[2])
-    l_1.append(elem[1]) 
-    l_0.append(elem[0])
-    l_10.append(elem[10])
+    for bsx in elem:
+        if bsx not in latency_dict:
+            latency_dict[bsx] = []
+        latency_dict[bsx].append(elem[bsx])
 
 #print(l_2)
 import matplotlib.pyplot as plt
 x = range(ITER)
-y = []
-y.append(l_2)
-y.append(l_1)
-y.append(l_0)
-y.append(l_10)
 
 plt.xlabel("X-axis")
 plt.ylabel("Y-axis")
 plt.title("A test graph")
-for i in range(len(y)):
-    plt.plot(x,y[i],label = 'id %s'%i)
+for i in latency_dict:
+    plt.plot(x,latency_dict[i],label = 'id %s'%i)
 plt.legend()
 plt.show()
 #print(phone1.current_position)

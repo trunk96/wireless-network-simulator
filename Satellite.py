@@ -53,7 +53,7 @@ class Satellite:
         self.ue_allocation = {}
         self.ue_bitrate_allocation ={}
 
-        self.wardrop_alpha = 0.5
+        self.wardrop_alpha = 0.1
 
         self.T = 10
         self.resource_utilization_array = [0] * self.T
@@ -66,8 +66,7 @@ class Satellite:
         interference = 0
         for elem in rsrp:
             if elem != self.bs_id and util.find_bs_by_id(elem).bs_type == "sat":
-                interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
-            
+                interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()  
         thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000000
         sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
         r = self.carrier_bnd * 1000000 * math.log2(1 + sinr)
@@ -79,6 +78,16 @@ class Satellite:
         n_symb = math.ceil(data_rate*1000000 / r_64)
         return n_symb, r
 
+    def compute_sinr(self, rsrp):
+        interference = 0
+
+        for elem in rsrp:
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type == "sat":
+                interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
+  
+        thermal_noise = constants.Boltzmann*290*self.carrier_bnd*1000000
+        sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
+        return sinr
 
     def request_connection(self, ue_id, data_rate, rsrp):
         # this method will be called by an UE that tries to connect to this satellite.
@@ -239,6 +248,7 @@ class Satellite:
     def compute_latency(self, ue_id):
         if ue_id in self.ue_allocation:
             return self.wardrop_alpha * self.ue_allocation[ue_id]/64 
+            #return self.wardrop_alpha * self.frame_utilization/64
         return 0
 
     def compute_r(self, ue_id, rsrp):

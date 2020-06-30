@@ -110,9 +110,11 @@ class NRBaseStation:
     def compute_nprb_NR(self, data_rate, rsrp):
         #compute SINR
         interference = 0
+        
         for elem in rsrp:
-            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat" and util.find_bs_by_id(elem).carrier_frequency != self.carrier_frequency:
-                interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat" and util.find_bs_by_id(elem).carrier_frequency == self.carrier_frequency:
+                total, used = util.find_bs_by_id(elem).get_state()
+                interference = interference + (10 ** (rsrp[elem]/10))*(used/total)
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
         #thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb / (10 * 2**self.numerology))]*1000000*(self.compute_rbur()+0.001)
@@ -127,6 +129,19 @@ class NRBaseStation:
         N_prb = math.ceil(data_rate*1000000 / r) #data rate is in Mbps
         return N_prb, r
 
+    def compute_sinr(self, rsrp):
+        interference = 0
+    
+        for elem in rsrp:
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat" and util.find_bs_by_id(elem).carrier_frequency != self.carrier_frequency:
+                interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
+    
+        #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
+        #thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb / (10 * 2**self.numerology))]*1000000*(self.compute_rbur()+0.001)
+        thermal_noise = constants.Boltzmann*293.15*15*(2**self.numerology)*1000 # delta_F = 15*2^mu KHz each subcarrier since we are considering measurements at subcarrirer level (like RSRP)
+        sinr = (10**(rsrp[self.bs_id]/10))/(thermal_noise + interference)
+        return sinr
+
     #this method will be called by an UE that tries to connect to this BS.
     #the return value will be the actual bandwidth assigned to the user
     def request_connection(self, ue_id, data_rate, rsrp):
@@ -137,7 +152,7 @@ class NRBaseStation:
         #check if there is enough bitrate, if not then do not allocate the user
         if self.total_bitrate - self.allocated_bitrate < r*N_prb/1000000:
             dr = self.total_bitrate - self.allocated_bitrate
-            N_prb, r = self.compute_nprb_NR(data_rate, rsrp)
+            N_prb, r = self.compute_nprb_NR(dr, rsrp)
             #self.ue_bitrate_allocation[ue_id] = 0
             #self.ue_pb_allocation[ue_id] = 0
             #return 0
@@ -181,9 +196,12 @@ class NRBaseStation:
         #print(N_prb*r/1000000)
 
         #check before if there is enough bitrate
-        if self.total_bitrate - self.allocated_bitrate < diff * r / 1000000:
-            #print("BS_ID", self.bs_id, "UE_ID: ", ue_id ,"NO MORE BITRATE", self.total_bitrate - self.allocated_bitrate, diff * r / 1000000)
-            return self.ue_pb_allocation[ue_id] * r / 1000000
+        if  diff >= 0 and self.total_bitrate > self.allocated_bitrate and self.total_bitrate - self.allocated_bitrate < diff * r / 1000000:
+            print("BS_ID", self.bs_id, "UE_ID: ", ue_id ,"NO MORE BITRATE", self.total_bitrate - self.allocated_bitrate, diff * r / 1000000)
+            #return self.ue_pb_allocation[ue_id] * r / 1000000
+            dr = self.total_bitrate - self.allocated_bitrate
+            N_prb, r = self.compute_nprb_NR(self.ue_bitrate_allocation[ue_id]+dr, rsrp)
+            diff = N_prb - self.ue_pb_allocation[ue_id]
 
 
         if self.total_prb - self.allocated_prb >= diff:
@@ -232,6 +250,7 @@ class NRBaseStation:
     def compute_latency(self, ue_id):
         if ue_id in self.ue_pb_allocation:
             return self.wardrop_alpha * self.ue_pb_allocation[ue_id]
+            #return self.wardrop_alpha * self.allocated_prb
         return 0
 
     def compute_r(self, ue_id, rsrp):
