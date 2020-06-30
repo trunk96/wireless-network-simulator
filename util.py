@@ -11,7 +11,7 @@ class EnvType (Enum):
     URBAN = 2
 
 
-MIN_RSRP = -140 #dB
+MIN_RSRP = -117 # -140 #dB
 
 def compute_rsrp(ue, bs, env):
     if bs.bs_type == "sat":

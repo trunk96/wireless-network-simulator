@@ -232,11 +232,11 @@ class user_equipment:
         bs = None
         data_rate = None
         if bs_id not in available_bs:
-            print("[NO BASE STATION FOUND]: User ID %s has not found the selected base station (BS %s)" %(self.ue_id, bs_id))
+            #print("[NO BASE STATION FOUND]: User ID %s has not found the selected base station (BS %s)" %(self.ue_id, bs_id))
             return
         else:
             if bs_id not in self.bs_bitrate_allocation:
-                print("[NO ALLOCATION FOR THIS BASE STATION FOUND]: User ID %s has not found any bitrate allocation for the selected base station (BS %s)" %(self.ue_id, bs_id))
+                #print("[NO ALLOCATION FOR THIS BASE STATION FOUND]: User ID %s has not found any bitrate allocation for the selected base station (BS %s)" %(self.ue_id, bs_id))
                 return
             elif self.bs_bitrate_allocation[bs_id] == 0:
                 self.current_bs[bs_id] = 0
@@ -244,12 +244,16 @@ class user_equipment:
             data_rate = util.find_bs_by_id(bs_id).request_connection(self.ue_id, self.bs_bitrate_allocation[bs_id], available_bs)
             self.current_bs[bs_id] = data_rate
             self.actual_data_rate += data_rate
-        print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, bs_id, data_rate, self.requested_bitrate))
+        #print("[CONNECTION_ESTABLISHED]: User ID %s is now connected to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, bs_id, data_rate, self.requested_bitrate))
+
+    def connect_to_all_bs(self):
+        for bs in self.env.bs_list:
+            self.connect_to_bs_id(bs.bs_id)
 
     def disconnect_from_bs(self, bs_id):
         if bs_id in self.current_bs:
             util.find_bs_by_id(bs_id).request_disconnection(self.ue_id)
-            print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, bs_id))
+            #print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, bs_id))
             self.actual_data_rate -= self.current_bs[bs_id]
             del self.current_bs[bs_id]
         return
@@ -257,7 +261,7 @@ class user_equipment:
     def disconnect_from_all_bs(self):
         for bs in self.current_bs:
             util.find_bs_by_id(bs).request_disconnection(self.ue_id)
-            print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, bs))
+            #print("[CONNECTION_TERMINATED]: User ID %s is now disconnected from base_station %s" %(self.ue_id, bs))
         self.actual_data_rate = 0
         self.current_bs.clear()
 
@@ -265,19 +269,23 @@ class user_equipment:
     def update_connection(self):
         if len(self.current_bs) == 0:
             self.connect_to_bs()
+            print("UE_ID: ", self.ue_id, " NO CURRENT BS")
             return
 
         available_bs = self.env.discover_bs(self.ue_id)
+        #print("UE_ID: ", self.ue_id, " AVAILABLE BS: ", available_bs)
         #print(available_bs)
         if len(available_bs) == 0:
-            print("[NO BASE STATION FOUND]: User ID %s has not found any base station during connection update" %(self.ue_id))
-
+            #print("[NO BASE STATION FOUND]: User ID %s has not found any base station during connection update" %(self.ue_id))
+            #print("UE_ID: ", self.ue_id, " NO BS AVAILABLE")
+            return
 
         for elem in self.current_bs:
             if elem in available_bs:
                 if self.current_bs[elem] == 0:
+                    #print("UE_ID: ", self.ue_id, " NO CONNECTION TO BS", elem)
                     self.connect_to_bs_id(elem)
-                    return
+                    continue
                 data_rate = util.find_bs_by_id(elem).update_connection(self.ue_id, self.bs_bitrate_allocation[elem], available_bs)
                 
                 self.actual_data_rate -= self.current_bs[elem]
@@ -299,16 +307,26 @@ class user_equipment:
                 '''
             else:
                 #in this case no current base station is anymore visible
-                print("[BASE STATION LOST]: User ID %s has not found its base station during connection update" %(self.ue_id))
+                #print("[BASE STATION LOST]: User ID %s has not found its base station during connection update" %(self.ue_id))
                 self.disconnect_from_bs(elem)
                 self.connect_to_bs()
 
-            print("[CONNECTION_UPDATE]: User ID %s has updated its connection to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, elem, self.current_bs[elem], self.bs_bitrate_allocation[elem]))
+            #print("[CONNECTION_UPDATE]: User ID %s has updated its connection to base_station %s with a data rate of %s/%s Mbps" %(self.ue_id, elem, self.current_bs[elem], self.bs_bitrate_allocation[elem]))
 
     def initial_timestep(self):
         rsrp = self.env.discover_bs(self.ue_id)
-        bs = max(rsrp, key = rsrp.get)
-        self.bs_bitrate_allocation[bs] = self.requested_bitrate
+        '''bs = max(rsrp, key = rsrp.get)
+        rsrp2 = {}
+        for elem in rsrp:
+            if elem != bs:
+                rsrp2[elem] = rsrp[elem]
+        bs2 = max(rsrp2, key = rsrp2.get)
+        self.bs_bitrate_allocation[bs] = self.requested_bitrate/2
+        self.bs_bitrate_allocation[bs2] = self.requested_bitrate/2
+        '''
+        n = len(rsrp)
+        for elem in rsrp:
+            self.bs_bitrate_allocation[elem] = self.requested_bitrate/n
         for elem in rsrp:
             if elem not in self.bs_bitrate_allocation:
                 #this means that it is the first time we encounter that base station
@@ -341,18 +359,18 @@ class user_equipment:
             for q in self.bs_bitrate_allocation:
                 if p != q:
                     bs_p = util.find_bs_by_id(p)
-                    l_p = bs_p.compute_latency()
+                    l_p = bs_p.compute_latency(self.ue_id)
 
 
                     bs_q = util.find_bs_by_id(q)
-                    l_q = bs_q.compute_latency()
+                    l_q = bs_q.compute_latency(self.ue_id)
                     
                     mu_pq = 1
-                    if (l_p - l_q) < self.env.wardrop_epsilon or self.bs_bitrate_allocation[q] >= bs_q.total_bitrate - (self.env.wardrop_epsilon/(2*self.env.wardrop_beta)):
+                    if (l_p - l_q) < self.env.wardrop_epsilon or bs_q.allocated_bitrate >= bs_q.total_bitrate - (self.env.wardrop_epsilon/(2*self.env.wardrop_beta)):
                         mu_pq = 0
                     
                     mu_qp = 1
-                    if (l_q - l_p) < self.env.wardrop_epsilon or self.bs_bitrate_allocation[p] >= bs_p.total_bitrate - (self.env.wardrop_epsilon/(2*self.env.wardrop_beta)):
+                    if (l_q - l_p) < self.env.wardrop_epsilon or bs_p.allocated_bitrate >= bs_p.total_bitrate - (self.env.wardrop_epsilon/(2*self.env.wardrop_beta)):
                         mu_qp = 0
 
                     r_pq = self.bs_bitrate_allocation[p]*mu_pq*self.wardrop_sigma

@@ -49,11 +49,11 @@ class Satellite:
         self.total_symbols = (self.frame_length - 288*2 - 64*2)#39104 - 288*2 - 64*2 #(self.frame_length - 288*2 - 64*2) # in a frame there are 2 reference burst made of 288 symbols each, with a guard time of 64 symbols between them and between any other burst
         self.frame_utilization = 0  # allocated resources
         self.total_bitrate = total_bitrate
-        self.bitrate_utilization = 0
+        self.allocated_bitrate = 0
         self.ue_allocation = {}
         self.ue_bitrate_allocation ={}
 
-        self.wardrop_alpha = 1
+        self.wardrop_alpha = 0.5
 
         self.T = 10
         self.resource_utilization_array = [0] * self.T
@@ -90,7 +90,7 @@ class Satellite:
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
         
         #check if there is enough bitrate
-        if self.total_bitrate-self.bitrate_utilization <= (r*N_symb*64)/1000000:
+        if self.total_bitrate-self.allocated_bitrate <= (r*N_symb*64)/1000000:
             return 0
 
         #check if there are enough symbols
@@ -111,11 +111,11 @@ class Satellite:
 
         if ue_id not in self.ue_bitrate_allocation:
             self.ue_bitrate_allocation[ue_id] = (r*N_symb*64)/1000000  
-            self.bitrate_utilization += (r*N_symb*64)/1000000
+            self.allocated_bitrate += (r*N_symb*64)/1000000
         else:
-            self.bitrate_utilization -= self.ue_bitrate_allocation[ue_id]
+            self.allocated_bitrate -= self.ue_bitrate_allocation[ue_id]
             self.ue_bitrate_allocation[ue_id] = (r*N_symb*64)/1000000
-            self.bitrate_utilization += (r*N_symb*64)/1000000  
+            self.allocated_bitrate += (r*N_symb*64)/1000000  
         #print(r)
         #print(N_symb)
         return (r*N_symb*64)/1000000 #we want a data rate in Mbps, not in bps
@@ -134,7 +134,7 @@ class Satellite:
         N_symb, r = self.compute_nsymb_SAT(data_rate, rsrp)
         
         #check again if there is enough bitrate
-        if self.total_bitrate - (self.bitrate_utilization - self.ue_bitrate_allocation[ue_id]) <= (r*N_symb*64)/1000000:
+        if self.total_bitrate - (self.allocated_bitrate - self.ue_bitrate_allocation[ue_id]) <= (r*N_symb*64)/1000000:
             return self.ue_bitrate_allocation[ue_id]
         
         
@@ -144,9 +144,9 @@ class Satellite:
             self.ue_allocation[ue_id] = N_symb*64 + self.tb_header +self.guard_space
             self.frame_utilization += self.ue_allocation[ue_id]
 
-            self.bitrate_utilization -= self.ue_bitrate_allocation[ue_id]
+            self.allocated_bitrate -= self.ue_bitrate_allocation[ue_id]
             self.ue_bitrate_allocation[ue_id] = (r*N_symb*64)/1000000
-            self.bitrate_utilization += self.ue_bitrate_allocation[ue_id]
+            self.allocated_bitrate += self.ue_bitrate_allocation[ue_id]
         
         else:
             # no room for the entire allocation, trying to allocate at least a part
@@ -155,7 +155,7 @@ class Satellite:
                 self.frame_utilization -= self.ue_allocation[ue_id]
                 self.ue_allocation[ue_id] = 0
                 
-                self.bitrate_utilization -= self.ue_bitrate_allocation[ue_id]
+                self.allocated_bitrate -= self.ue_bitrate_allocation[ue_id]
                 self.ue_allocation[ue_id] = 0
                 return 0
 
@@ -163,9 +163,9 @@ class Satellite:
             self.ue_allocation[ue_id] = self.tb_header + N_symb*64 + self.guard_space
             self.frame_utilization += self.ue_allocation[ue_id]
 
-            self.bitrate_utilization -= self.ue_bitrate_allocation[ue_id]
+            self.allocated_bitrate -= self.ue_bitrate_allocation[ue_id]
             self.ue_allocation[ue_id] = (r*N_symb*64)/1000000
-            self.bitrate_utilization += self.ue_bitrate_allocation[ue_id]
+            self.allocated_bitrate += self.ue_bitrate_allocation[ue_id]
 
         return (r*N_symb*64)/1000000 #in Mbps, not in bps
 
@@ -236,8 +236,10 @@ class Satellite:
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
 
-    def compute_latency(self):
-        return self.wardrop_alpha * self.frame_utilization/64 
+    def compute_latency(self, ue_id):
+        if ue_id in self.ue_allocation:
+            return self.wardrop_alpha * self.ue_allocation[ue_id]/64 
+        return 0
 
     def compute_r(self, ue_id, rsrp):
         N_symb, r = self.compute_nsymb_SAT(1, rsrp)

@@ -158,8 +158,10 @@ class LTEBaseStation:
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
       
-    def compute_latency(self):
-        return self.wardrop_alpha * self.allocated_prb
+    def compute_latency(self, ue_id):
+        if ue_id in self.ue_pb_allocation:
+            return self.wardrop_alpha * self.ue_pb_allocation[ue_id]
+        return 0
     
     def compute_r(self, ue_id, rsrp):
         N_prb, r = self.compute_nprb_LTE(1, rsrp)

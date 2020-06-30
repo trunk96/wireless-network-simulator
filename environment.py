@@ -24,7 +24,7 @@ class wireless_environment:
         self.x_limit = n
         self.cumulative_reward = 0
         self.sampling_time = sampling_time
-        self.wardrop_epsilon = 0.01 #TODO
+        self.wardrop_epsilon = 0.05 #TODO
         self.wardrop_beta = 0
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
@@ -119,9 +119,10 @@ class wireless_environment:
                 thread_pool.append(thread)
             for i in range(0, len(self.bs_list)):
                 res = thread_pool[i].result() 
-                if res > -1000000:#if (res > util.MIN_RSRP):
+                #if res > -1000000:
+                if (res > util.MIN_RSRP):
                     rsrp[i] = res
-       print(rsrp)
+       #print(rsrp)
        return rsrp
 
     def initial_timestep(self):
@@ -132,8 +133,8 @@ class wireless_environment:
             rsrp = self.discover_bs(ue.ue_id)
             for elem in rsrp:
                r = util.find_bs_by_id(elem).compute_r(ue.ue_id, rsrp)
-               if 1/(r/1000000) > self.wardrop_beta: #we convert r in Mbps
-                   self.wardrop_beta = 1/(r/1000000)
+               if util.find_bs_by_id(elem).wardrop_alpha/(r/1000000) > self.wardrop_beta: #we convert r in Mbps
+                   self.wardrop_beta =  util.find_bs_by_id(elem).wardrop_alpha/(r/1000000)
         #now call each initial_timestep function in order to set the initial conditions for each commodity in terms of bitrate
         #to be requested to each BS
         for ue in self.ue_list:

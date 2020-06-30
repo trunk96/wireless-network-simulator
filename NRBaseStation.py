@@ -96,7 +96,11 @@ class NRBaseStation:
         self.T = 10
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
-        self.wardrop_alpha = 1
+
+        if(self.antenna_power < 5):
+            self.wardrop_alpha = 0.1
+        else:
+            self.wardrop_alpha = 0.2
 
 
     def compute_rbur(self):
@@ -107,7 +111,7 @@ class NRBaseStation:
         #compute SINR
         interference = 0
         for elem in rsrp:
-            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat":
+            if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat" and util.find_bs_by_id(elem).carrier_frequency != self.carrier_frequency:
                 interference = interference + (10 ** (rsrp[elem]/10))*util.find_bs_by_id(elem).compute_rbur()
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
@@ -132,9 +136,11 @@ class NRBaseStation:
         
         #check if there is enough bitrate, if not then do not allocate the user
         if self.total_bitrate - self.allocated_bitrate < r*N_prb/1000000:
-            self.ue_bitrate_allocation[ue_id] = 0
-            self.ue_pb_allocation[ue_id] = 0
-            return 0
+            dr = self.total_bitrate - self.allocated_bitrate
+            N_prb, r = self.compute_nprb_NR(data_rate, rsrp)
+            #self.ue_bitrate_allocation[ue_id] = 0
+            #self.ue_pb_allocation[ue_id] = 0
+            #return 0
 
         #check if there are enough PRBs
         if self.total_prb - self.allocated_prb <= N_prb:
@@ -156,7 +162,7 @@ class NRBaseStation:
             self.ue_bitrate_allocation[ue_id] = r * N_prb / 1000000
             self.allocated_bitrate += r * N_prb / 1000000
         
-        print("Allocated %s/%s NR PRB" %(N_prb, old_N_prb))    
+        #print("Allocated %s/%s NR PRB" %(N_prb, old_N_prb))    
         return r*N_prb/1000000 #we want a data rate in Mbps, not in bps
 
     def request_disconnection(self, ue_id):
@@ -168,10 +174,15 @@ class NRBaseStation:
     def update_connection(self, ue_id, data_rate, rsrp):
 
         N_prb, r = self.compute_nprb_NR(data_rate, rsrp)
+        #if (ue_id == 3 and self.bs_id == 2):
+        #    print(N_prb, r)
         diff = N_prb - self.ue_pb_allocation[ue_id]
+        #print("BS_ID", self.bs_id, "UE_ID: ", ue_id ," data_rate: ", data_rate," diff: ", diff, "ALREADY ALLOCATED: ", self.ue_pb_allocation[ue_id])
+        #print(N_prb*r/1000000)
 
         #check before if there is enough bitrate
-        if self.total_bitrate - self.allocated_bitrate < diff * r / 100000:
+        if self.total_bitrate - self.allocated_bitrate < diff * r / 1000000:
+            #print("BS_ID", self.bs_id, "UE_ID: ", ue_id ,"NO MORE BITRATE", self.total_bitrate - self.allocated_bitrate, diff * r / 1000000)
             return self.ue_pb_allocation[ue_id] * r / 1000000
 
 
@@ -218,8 +229,10 @@ class NRBaseStation:
         self.resource_utilization_array = [0] * self.T
         self.resource_utilization_counter = 0
 
-    def compute_latency(self):
-        return self.wardrop_alpha * self.allocated_prb
+    def compute_latency(self, ue_id):
+        if ue_id in self.ue_pb_allocation:
+            return self.wardrop_alpha * self.ue_pb_allocation[ue_id]
+        return 0
 
     def compute_r(self, ue_id, rsrp):
         N_prb, r = self.compute_nprb_NR(1, rsrp)

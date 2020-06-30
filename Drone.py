@@ -116,8 +116,8 @@ class DroneRelay:
         self.current_position = self.position
         self.theta_k = new_theta
 
-    def compute_latency(self):
-        return util.find_bs_by_id(self.linked_bs).compute_latency() 
+    def compute_latency(self, ue_id):
+        return util.find_bs_by_id(self.linked_bs).compute_latency(ue_id) 
 
     def compute_r(self, ue_id, rsrp):
         return util.find_bs_by_id(self.linked_bs).compute_r(ue_id, rsrp)
@@ -371,8 +371,8 @@ class DroneBaseStation:
         self.theta_k = new_theta
 
     
-    def compute_latency(self):
-        return self.wardrop_alpha * self.allocated_prb
+    def compute_latency(self, ue_id):
+        return self.wardrop_alpha * self.ue_pb_allocation[ue_id]
 
     def compute_r(self, ue_id, rsrp):
         N_prb, r = self.compute_nprb_NR(1, rsrp)
