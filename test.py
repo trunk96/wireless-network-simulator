@@ -33,6 +33,7 @@ bs.append(sat_bs)
 #nr_bs2 = env.place_NR_base_station((1500, 1500, 40), 800, 2, 20, 16, 3, 100, total_bitrate = 10000)
 
 parm = [
+    #BS1
     {"pos": (1500, 1500, 40),
     "freq": 800,
     "numerology": 1, 
@@ -41,7 +42,8 @@ parm = [
     "loss": 3,
     "bandwidth": 20,
     "max_bitrate": 100},
-
+    
+    #BS2
     {"pos": (3000, 3000, 40),
     "freq": 800,
     "numerology": 1, 
@@ -51,6 +53,7 @@ parm = [
     "bandwidth": 20,
     "max_bitrate": 100},
 
+    #BS3
     {"pos": (1000, 500, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -61,6 +64,7 @@ parm = [
     #15
     "max_bitrate": 100},
 
+    #BS4
     {"pos": (2000, 500, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -70,6 +74,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS5
     {"pos": (500, 1500, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -79,6 +84,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS6
     {"pos": (2500, 1500, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -88,6 +94,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS7
     {"pos": (1000, 2500, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -97,6 +104,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS8
     {"pos": (2000, 2500, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -106,6 +114,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS9
     {"pos": (2500, 2000, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -115,6 +124,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS10
     {"pos": (3500, 2000, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -124,6 +134,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 20},
 
+    #BS11
     {"pos": (2000, 3000, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -133,6 +144,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS12
     {"pos": (4000, 3000, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -142,6 +154,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS13
     {"pos": (2500, 4000, 40),
     "freq": 1700,
     "numerology": 1, 
@@ -151,6 +164,7 @@ parm = [
     "bandwidth": 40,
     "max_bitrate": 100},
 
+    #BS14
     {"pos": (3500, 4000, 40),
     "freq": 1700,
     "numerology": 1, 
