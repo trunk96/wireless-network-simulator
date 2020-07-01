@@ -53,7 +53,7 @@ class Satellite:
         self.ue_allocation = {}
         self.ue_bitrate_allocation ={}
 
-        self.wardrop_alpha = 0.1
+        self.wardrop_alpha = 0.5
 
         self.T = 10
         self.resource_utilization_array = [0] * self.T
@@ -100,7 +100,8 @@ class Satellite:
         
         #check if there is enough bitrate
         if self.total_bitrate-self.allocated_bitrate <= (r*N_symb*64)/1000000:
-            return 0
+            dr = self.total_bitrate - self.allocated_bitrate
+            N_prb, r = self.compute_nsymb_SAT(dr, rsrp)
 
         #check if there are enough symbols
         if self.total_symbols - self.frame_utilization <= self.tb_header + N_symb*64 + self.guard_space:
@@ -144,7 +145,8 @@ class Satellite:
         
         #check again if there is enough bitrate
         if self.total_bitrate - (self.allocated_bitrate - self.ue_bitrate_allocation[ue_id]) <= (r*N_symb*64)/1000000:
-            return self.ue_bitrate_allocation[ue_id]
+            dr = self.total_bitrate - (self.allocated_bitrate - self.ue_bitrate_allocation[ue_id])
+            N_prb, r = self.compute_nsymb_SAT(dr, rsrp)
         
         
         if self.total_symbols - (self.frame_utilization - self.ue_allocation[ue_id]) >= N_symb*64 + self.tb_header + self.guard_space:

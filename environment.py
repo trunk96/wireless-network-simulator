@@ -24,7 +24,7 @@ class wireless_environment:
         self.x_limit = n
         self.cumulative_reward = 0
         self.sampling_time = sampling_time
-        self.wardrop_epsilon = 0.05 #TODO
+        self.wardrop_epsilon = 0.5 #TODO
         self.wardrop_beta = 0
     
     def insert_ue(self, ue_class, starting_position = None, speed = 0, direction = 0):
@@ -143,11 +143,13 @@ class wireless_environment:
 
     def next_timestep(self):
         #with ThreadPoolExecutor(max_workers=len(self.ue_list)) as executor:
-        for ue in self.ue_list:
+        if self.wardrop_epsilon > self.wardrop_beta*ue.ue_class[0]*len(self.ue_list):
+            print("Warning: Epsilon is outside the admissible ranges (", self.wardrop_epsilon, "/", self.wardrop_beta*ue.ue_class[0]*len(self.ue_list), ")")
+        for ues in self.ue_list:
             #thread = executor.submit()
-            ue.next_timestep()
-        for bs in self.bs_list:
-            bs.next_timestep()
+            ues.next_timestep()
+        for bss in self.bs_list:
+            bss.next_timestep()
 
     
     def request_connection(self, ue_id, requested_bitrate, available_bs):

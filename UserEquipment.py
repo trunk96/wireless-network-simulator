@@ -7,7 +7,7 @@ MAX_STEP = 2000
 
 # service classes for UEs, "class: Mbps"
 ue_class = {
-    0: 2,
+    0: 50,
     1: 3
 }
 ue_class_lambda = {
@@ -325,16 +325,14 @@ class user_equipment:
         self.bs_bitrate_allocation[bs2] = self.requested_bitrate/2
         '''
         n = len(rsrp)
-        #n1 = random.choice(list(rsrp))
-        n1 = 9
-        n2 = random.choice(list(rsrp))
-        while n2 == n1:
-            n2 = random.choice(list(rsrp))
-        
-        print(n1, n2)
+        n1 = random.choice(list(rsrp))
+        if self.ue_id == 1 or self.ue_id == 19:
+            n1 = 0
+        if 4 in rsrp and random.random() < 0.9:
+            n1 = 4
         for elem in rsrp:
-            if elem != n1  and elem != n2:
-                self.bs_bitrate_allocation[elem] = self.requested_bitrate/(n-2)
+            if elem != n1:
+                self.bs_bitrate_allocation[elem] = self.requested_bitrate/(n-1)
         for elem in rsrp:
             if elem not in self.bs_bitrate_allocation:
                 #this means that it is the first time we encounter that base station
