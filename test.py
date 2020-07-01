@@ -10,7 +10,7 @@ import pandas as pd
 
 PLOT = False
 N_UE = 20
-ITER = 200#40000    
+ITER = 40000    
 
 SELECTED_UE = 3
 
