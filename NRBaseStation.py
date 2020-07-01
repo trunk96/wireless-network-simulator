@@ -114,7 +114,7 @@ class NRBaseStation:
         for elem in rsrp:
             if elem != self.bs_id and util.find_bs_by_id(elem).bs_type != "sat" and util.find_bs_by_id(elem).carrier_frequency == self.carrier_frequency:
                 total, used = util.find_bs_by_id(elem).get_state()
-                interference = interference + (10 ** (rsrp[elem]/10))*(used/total)
+                interference = interference + (10 ** (rsrp[elem]/10))*(used/total)*(self.allocated_prb/self.total_prb)
         
         #thermal noise is computed as k_b*T*delta_f, where k_b is the Boltzmann's constant, T is the temperature in kelvin and delta_f is the bandwidth
         #thermal_noise = constants.Boltzmann*293.15*list(NRbandwidth_prb_lookup[self.numerology][self.fr].keys())[list(NRbandwidth_prb_lookup[self.numerology][self.fr].values()).index(self.total_prb / (10 * 2**self.numerology))]*1000000*(self.compute_rbur()+0.001)

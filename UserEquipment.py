@@ -333,6 +333,10 @@ class user_equipment:
         for elem in rsrp:
             if elem != n1:
                 self.bs_bitrate_allocation[elem] = self.requested_bitrate/(n-1)
+        if self.ue_id == 2:
+                swap = self.bs_bitrate_allocation[0]*0.3
+                self.bs_bitrate_allocation[0] = self.bs_bitrate_allocation[0]*0.7
+                self.bs_bitrate_allocation[1] += swap
         for elem in rsrp:
             if elem not in self.bs_bitrate_allocation:
                 #this means that it is the first time we encounter that base station

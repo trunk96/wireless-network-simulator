@@ -6,10 +6,11 @@ import matplotlib.pyplot as plt
 import random
 import time
 import os
+import pandas as pd
 
 PLOT = False
 N_UE = 20
-ITER = 40000    
+ITER = 200#40000    
 
 SELECTED_UE = 3
 
@@ -21,6 +22,8 @@ ue = []
 bs = []
 error = []
 latency = {}
+prbs = {}
+bitrates = {}
 
 for i in range(0, N_UE):
     id = env.insert_ue(0, starting_position=(random.randint(0, env.x_limit-1), random.randint(0, env.y_limit-1), 1), speed = 0, direction = random.randint(0, 359))
@@ -72,7 +75,7 @@ parm = [
     "gain": 5,
     "loss": 1,
     "bandwidth": 25,
-    "max_bitrate": 50},
+    "max_bitrate": 55},
 
     #BS5
     {"pos": (3000, 3000, 40),
@@ -162,9 +165,6 @@ for i in range(0,ITER):
                 print("BS ", bsi, " PRB: ", util.find_bs_by_id(bsi).allocated_prb, "/", util.find_bs_by_id(bsi).total_prb, " Bitrate: ", util.find_bs_by_id(bsi).allocated_bitrate, "/", util.find_bs_by_id(bsi).total_bitrate)
             else:
                 print("BS ", bsi, " PRB: ", util.find_bs_by_id(bsi).frame_utilization/64, "/", util.find_bs_by_id(bsi).total_symbols/64, " Bitrate: ", util.find_bs_by_id(bsi).allocated_bitrate, "/", util.find_bs_by_id(bsi).total_bitrate)
-            
-        
-
         
     max_e = 0
     for phone in ue:
@@ -191,6 +191,20 @@ for i in range(0,ITER):
         latency[phone].append(latency_phone)
     error.append(max_e)
 
+    for bsi in bs:
+        if bsi not in prbs:
+            prbs[bsi] = []
+        if bsi not in bitrates:
+            bitrates[bsi] = []
+        
+        if util.find_bs_by_id(bsi).bs_type != "sat":
+            prbs[bsi].append(util.find_bs_by_id(bsi).allocated_prb)
+            bitrates[bsi].append(util.find_bs_by_id(bsi).allocated_bitrate)
+        else:
+            prbs[bsi].append(util.find_bs_by_id(bsi).frame_utilization/64)
+            bitrates[bsi].append(util.find_bs_by_id(bsi).allocated_bitrate)
+              
+
     env.next_timestep()
     #print(phone1.bs_bitrate_allocation)
 
@@ -201,6 +215,31 @@ print("\n\n---------------------------------------------------\n\n")
 #print(latency)
 print(util.find_ue_by_id(3).current_position)
 
+ue_latency = {}
+
+for phone in latency:
+    df = pd.DataFrame.from_dict(latency[phone])
+    df.to_csv(".\\data\\latency_UE"+str(phone)+".csv", sep=";")
+
+df = pd.DataFrame(error)
+df.to_csv(".\\data\\error.csv", sep=";")
+
+for bsi in bs:
+    df = pd.DataFrame.from_dict(prbs[bsi])
+    df.to_csv(".\\data\\resourceblocks_BS"+str(bsi)+".csv", sep=";")
+    df = pd.DataFrame.from_dict(bitrates[bsi])
+    df.to_csv(".\\data\\bitrate_BS"+str(bsi)+".csv", sep=";")
+
+'''
+x = range(ITER)
+
+plt.xlabel("Simulation time (ms)")
+plt.ylabel("Error")
+plt.title("Error")
+plt.plot(x,error)
+plt.show()
+'''
+'''
 for phone in ue:
 
     latency_dict = {}
@@ -223,4 +262,5 @@ for phone in ue:
     plt.show()
 #print(phone1.current_position)
 #print(phone2.bs_bitrate_allocation)
-#print(phone2.current_position)'''
+#print(phone2.current_position)
+'''
