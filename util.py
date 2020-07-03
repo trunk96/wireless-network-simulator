@@ -95,14 +95,9 @@ def plot(ue, bs, env):
 
     plt.cla()
 
-<<<<<<< HEAD
-    ax.set_xlim(0, env.x_limit)
-    ax.set_ylim(0, env.y_limit)
-=======
     #ax.set_xlim(0, env.x_limit)
     #ax.set_ylim(0, env.y_limit)
 
->>>>>>> wardrop
     colors = cm.rainbow(np.linspace(0, 1, len(bs)))
 
     for j in bs:
