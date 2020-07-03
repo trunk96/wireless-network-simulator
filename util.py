@@ -11,15 +11,21 @@ class EnvType (Enum):
     URBAN = 2
 
 
-MIN_RSRP = -140 #dB
+MIN_RSRP = -120 # -140 #dB
 
 def compute_rsrp(ue, bs, env):
     if bs.bs_type == "sat":
         return bs.sat_eirp - bs.path_loss - bs.atm_loss - bs.ut_G_T
+    elif bs.bs_type == "drone_relay":
+        return bs.compute_rsrp_drone(ue)
     else:
         #lte and nr case
         path_loss = compute_path_loss_cost_hata(ue, bs, env)
-        subcarrier_power = 10*math.log10(bs.antenna_power*1000 / (bs.total_prb*bs.number_subcarriers))
+        subcarrier_power = 0
+        if (bs.bs_type == "lte"):
+            subcarrier_power = 10*math.log10(bs.antenna_power*1000 / ((bs.total_prb/10)*bs.number_subcarriers))
+        else:
+            subcarrier_power = 10*math.log10(bs.antenna_power*1000 / ((bs.total_prb/(10*2**bs.numerology))*bs.number_subcarriers))
         return subcarrier_power + bs.antenna_gain - bs.feeder_loss - path_loss
 
 def compute_path_loss_cost_hata(ue, bs, env, save = None):
@@ -89,8 +95,14 @@ def plot(ue, bs, env):
 
     plt.cla()
 
+<<<<<<< HEAD
     ax.set_xlim(0, env.x_limit)
     ax.set_ylim(0, env.y_limit)
+=======
+    #ax.set_xlim(0, env.x_limit)
+    #ax.set_ylim(0, env.y_limit)
+
+>>>>>>> wardrop
     colors = cm.rainbow(np.linspace(0, 1, len(bs)))
 
     for j in bs:
@@ -113,10 +125,17 @@ def plot(ue, bs, env):
         ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
 
     for j in range(0, len(bs)):
-        ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
+        if find_bs_by_id(j).bs_type == "drone_relay":
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400, edgecolor = colors[find_bs_by_id(j).linked_bs], linewidth = 3)
+        elif find_bs_by_id(j).bs_type == "drone_bs":
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "^", s = 400)
+        else:
+            ax.scatter(x_bs[j], y_bs[j], color = colors[j], label = "BS", marker = "s", s = 400)
     
     for j in range(0, len(bs)):
         ax.annotate("BS"+str(j), (x_bs[j], y_bs[j]))
 
     ax.grid(True)
+    ax.set_ylabel("[m]")
+    ax.set_xlabel("[m]")
     fig.canvas.draw()
