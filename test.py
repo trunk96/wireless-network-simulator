@@ -230,7 +230,7 @@ for bsi in bs:
     df = pd.DataFrame.from_dict(bitrates[bsi])
     df.to_csv(".\\data\\bitrate_BS"+str(bsi)+".csv", sep=";")
 
-'''
+
 x = range(ITER)
 
 plt.xlabel("Simulation time (ms)")
@@ -238,7 +238,7 @@ plt.ylabel("Error")
 plt.title("Error")
 plt.plot(x,error)
 plt.show()
-'''
+
 '''
 for phone in ue:
 

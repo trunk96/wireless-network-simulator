@@ -153,9 +153,6 @@ class NRBaseStation:
         if self.total_bitrate - self.allocated_bitrate < r*N_prb/1000000:
             dr = self.total_bitrate - self.allocated_bitrate
             N_prb, r = self.compute_nprb_NR(dr, rsrp)
-            #self.ue_bitrate_allocation[ue_id] = 0
-            #self.ue_pb_allocation[ue_id] = 0
-            #return 0
 
         #check if there are enough PRBs
         if self.total_prb - self.allocated_prb <= N_prb:
@@ -197,7 +194,7 @@ class NRBaseStation:
 
         #check before if there is enough bitrate
         if  diff >= 0 and self.total_bitrate > self.allocated_bitrate and self.total_bitrate - self.allocated_bitrate < diff * r / 1000000:
-            print("BS_ID", self.bs_id, "UE_ID: ", ue_id ,"NO MORE BITRATE", self.total_bitrate - self.allocated_bitrate, diff * r / 1000000)
+            #print("BS_ID", self.bs_id, "UE_ID: ", ue_id ,"NO MORE BITRATE", self.total_bitrate - self.allocated_bitrate, diff * r / 1000000)
             #return self.ue_pb_allocation[ue_id] * r / 1000000
             dr = self.total_bitrate - self.allocated_bitrate
             N_prb, r = self.compute_nprb_NR(self.ue_bitrate_allocation[ue_id]+dr, rsrp)

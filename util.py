@@ -105,8 +105,12 @@ def plot(ue, bs, env):
         y_bs.append(find_bs_by_id(j).position[1])
 
     for i in range(0, len(ue)):
-        x_ue.append(find_ue_by_id(ue[i]).current_position[0])
-        y_ue.append(find_ue_by_id(ue[i]).current_position[1])
+        if ue[i] == 16:
+            x_ue.append(750)
+            y_ue.append(1000)
+        else:
+            x_ue.append(find_ue_by_id(ue[i]).current_position[0])
+            y_ue.append(find_ue_by_id(ue[i]).current_position[1])
 
     for i in range(0, len(ue)):
         for j in range(0, len(bs)):
@@ -117,7 +121,7 @@ def plot(ue, bs, env):
             ax.scatter(x_ue[i], y_ue[i], color = "tab:grey")
 
     for i in range(0, len(ue)):
-        ax.annotate(str(ue[i]), (x_ue[i], y_ue[i]))
+        ax.annotate(str(ue[i]+1), (x_ue[i], y_ue[i]))
 
     for j in range(0, len(bs)):
         if find_bs_by_id(j).bs_type == "drone_relay":
