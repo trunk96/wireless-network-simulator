@@ -74,7 +74,7 @@ class wireless_environment:
         self.bs_list.append(new_bs)
         return new_bs.bs_id
     
-    def place_NR_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, total_bitrate = 0, drone = False):
+    def place_NR_base_station(self, position, carrier_frequency, numerology, antenna_power, antenna_gain, feeder_loss, available_bandwidth, total_bitrate, drone = False):
         #check if the bandwith is in line with the specified numerology and specified carrier frequency
         fr = -1
         if (carrier_frequency <= 6000):  #below 6GHz
