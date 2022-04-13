@@ -1,5 +1,7 @@
 # 4G/5G/Satellite Wireless Network Simulator
 
+**<ins>New version of the simulator available here: https://github.com/trunk96/wireless-network-simulator-v2</ins>**
+
 This tool is designed in the context of my PhD in Automatic Control in Sapienza University of Rome to simulate resource allocations in 4G, 5G and Satellite networks, without entering in the details of the various protocols and of the syncronization mechanisms. Moreover this simulator does not considers actual transmission of the data, but just allocation of uplink/downlink resources.
 
 This simulator is very modular and the internal logic of each component can be changed according to specific needs.
